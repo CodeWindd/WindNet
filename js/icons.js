@@ -63,61 +63,49 @@ window.WEATHER_ICONS = {
 };
 
 /**
- * Maps the forecast state to one of the 50 CDN assets.
- * Implements logic: If precipitation probability < 20%, clean forecast keywords and replace with basic sky status.
+ * Clean and match forecast text strings to actual CDNs.
+ * Incorporates: If precipitation probability < 20%, replace precipitation graphics with clear or cloudy states.
  */
 window.getWeatherIcon = function(forecastText, isDay = true, precipProb = 0) {
     let desc = (forecastText || "").toLowerCase();
     
-    // Core rule logic: ignore precipitation features if probability is less than 20%
     const ignorePrecip = (precipProb !== null && precipProb < 20);
 
-    // Filter text values to comply with the 20% precipitation requirement
     if (ignorePrecip) {
         desc = desc.replace(/(rain|shower|drizzle|snow|thunderstorm|tstorm|hail|sleet|flurries)/g, "");
         if (desc.trim() === "" || desc.includes("chance") || desc.includes("slight")) {
-            desc = "partly cloudy"; 
+            desc = "partly cloudy";
         }
     }
 
-    // Tornadoes and Hurricanes
     if (desc.includes("tornado")) return window.WEATHER_ICONS.tornado;
-    if (desc.includes("hurricane") || desc.includes("typhoon") || desc.includes("tropical storm")) {
-        return window.WEATHER_ICONS.hurricane;
-    }
-
-    // Atmospheric elements
+    if (desc.includes("hurricane") || desc.includes("typhoon")) return window.WEATHER_ICONS.hurricane;
     if (desc.includes("dust") && desc.includes("wind")) return window.WEATHER_ICONS.dustWind;
     if (desc.includes("dust")) return window.WEATHER_ICONS.dust;
     if (desc.includes("smoke")) return window.WEATHER_ICONS.smoke;
     if (desc.includes("haze")) return window.WEATHER_ICONS.haze;
+
     if (desc.includes("fog")) {
         return isDay ? window.WEATHER_ICONS.fogDay : window.WEATHER_ICONS.fogNight;
     }
     if (desc.includes("mist")) return window.WEATHER_ICONS.mist;
 
-    // Wind events
-    if (desc.includes("windy") || desc.includes("breezy") || desc.includes("gale") || desc.includes("squall")) {
+    if (desc.includes("windy") || desc.includes("breezy") || desc.includes("gale")) {
         return window.WEATHER_ICONS.wind;
     }
 
-    // Thunderstorms
     if (desc.includes("thunderstorm") || desc.includes("tstorm")) {
-        if (desc.includes("rain") || desc.includes("heavy")) {
+        if (desc.includes("rain")) {
             return isDay ? window.WEATHER_ICONS.thunderstormsDayRain : window.WEATHER_ICONS.thunderstormsNightRain;
         }
         return isDay ? window.WEATHER_ICONS.thunderstormsDay : window.WEATHER_ICONS.thunderstormsNight;
     }
 
-    // Winter Sleet and Hail
     if (desc.includes("hail")) {
         return isDay ? window.WEATHER_ICONS.partlyCloudyDayHail : window.WEATHER_ICONS.partlyCloudyNightHail;
     }
-    if (desc.includes("sleet") || desc.includes("freezing rain")) {
-        return window.WEATHER_ICONS.sleet;
-    }
+    if (desc.includes("sleet")) return window.WEATHER_ICONS.sleet;
 
-    // Snow Elements
     if (desc.includes("snow") || desc.includes("flurries") || desc.includes("blizzard")) {
         if (desc.includes("partly") || desc.includes("scattered")) {
             return isDay ? window.WEATHER_ICONS.partlyCloudyDaySnow : window.WEATHER_ICONS.partlyCloudyNightSnow;
@@ -125,13 +113,13 @@ window.getWeatherIcon = function(forecastText, isDay = true, precipProb = 0) {
         return window.WEATHER_ICONS.snow;
     }
 
-    // Rainy conditions
     if (desc.includes("drizzle")) {
         if (desc.includes("partly") || desc.includes("scattered")) {
             return isDay ? window.WEATHER_ICONS.partlyCloudyDayDrizzle : window.WEATHER_ICONS.partlyCloudyNightDrizzle;
         }
         return window.WEATHER_ICONS.drizzle;
     }
+
     if (desc.includes("rain") || desc.includes("shower")) {
         if (desc.includes("partly") || desc.includes("scattered") || desc.includes("patchy")) {
             return isDay ? window.WEATHER_ICONS.partlyCloudyDayRain : window.WEATHER_ICONS.partlyCloudyNightRain;
@@ -139,7 +127,6 @@ window.getWeatherIcon = function(forecastText, isDay = true, precipProb = 0) {
         return window.WEATHER_ICONS.rain;
     }
 
-    // Sky coverage variables
     if (desc.includes("overcast")) {
         return isDay ? window.WEATHER_ICONS.overcastDay : window.WEATHER_ICONS.overcastNight;
     }
@@ -153,11 +140,5 @@ window.getWeatherIcon = function(forecastText, isDay = true, precipProb = 0) {
         return window.WEATHER_ICONS.cloudy;
     }
 
-    // Clear sky variations
-    if (desc.includes("sunny") || desc.includes("clear")) {
-        return isDay ? window.WEATHER_ICONS.clearDay : window.WEATHER_ICONS.clearNight;
-    }
-
-    // Default clean fallback
     return isDay ? window.WEATHER_ICONS.clearDay : window.WEATHER_ICONS.clearNight;
 };
