@@ -1,0 +1,16 @@
+{
+  "short_name": "WindNet",
+  "name": "WindNet - A Weather Tool",
+  "icons": [
+    {
+      "src": "https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
+}
