@@ -1,12 +1,12 @@
-const CACHE_NAME = 'windyweather-cache-v1';
+const CACHE_NAME = 'windyweather-pwa-cache-v2';
 const ASSETS = [
-  './',
-  './index.html',
-  './css/style.css',
-  './js/icons.js',
-  './js/location.js',
-  './js/weather.js',
-  './manifest.json'
+  'index.html',
+  'css/style.css',
+  'js/icons.js',
+  'js/location.js',
+  'js/weather.js',
+  'manifest.json',
+  'backdrop.png'
 ];
 
 self.addEventListener('install', (e) => {
