@@ -1,7 +1,7 @@
 const defaultLocation = {
-    name: "Dallas, TX",
-    lat: 32.7767,
-    lon: -96.7970
+    name: "Chicago, IL",
+    lat: 41.8781,
+    lon: -87.6298
 };
 
 window.currentLocation = { ...defaultLocation };
@@ -13,11 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
 function initLocationService() {
     const savedLocs = getSavedLocations();
     if (savedLocs.length === 0) {
-        // Hydrate default saved locations with Dallas
         saveLocation(defaultLocation.name, defaultLocation.lat, defaultLocation.lon);
     }
     
-    // Load last viewed location or default
     const lastSessionLoc = localStorage.getItem("last_viewed_location");
     if (lastSessionLoc) {
         try {
@@ -34,7 +32,6 @@ function initLocationService() {
     const input = document.getElementById("location-input");
     const suggestions = document.getElementById("suggestions");
 
-    // Input autocomplete geocoder suggestions
     input.addEventListener("input", debounce(async (e) => {
         const query = e.target.value.trim();
         if (query.length < 3) {
@@ -74,78 +71,38 @@ function initLocationService() {
                 suggestions.classList.add("hidden");
             }
         } catch (err) {
-            console.warn("Geocoder query missed data endpoint:", err);
+            console.warn("Geocoding service skipped: ", err);
         }
     }, 400));
 
-    // Handle outside clicks
     document.addEventListener("click", (e) => {
         if (!input.contains(e.target) && !suggestions.contains(e.target)) {
             suggestions.classList.add("hidden");
         }
     });
 
-    // Handle manual primary search
-    document.getElementById("search-btn").addEventListener("click", () => {
-        const query = input.value.trim();
-        if (query) {
-            fetchGeocodeAndLoad(query);
-        }
-    });
-
-    input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            const query = input.value.trim();
-            if (query) {
-                fetchGeocodeAndLoad(query);
-                suggestions.classList.add("hidden");
-            }
-        }
-    });
-
-    // Handle GPS trigger
     document.getElementById("gps-btn").addEventListener("click", () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 window.currentLocation = {
-                    name: `Current Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
+                    name: `My Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
                     lat: lat,
                     lon: lon
                 };
                 localStorage.setItem("last_viewed_location", JSON.stringify(window.currentLocation));
                 triggerWeatherFetch();
             }, () => {
-                alert("Location access was denied. Utilizing fallback coords.");
+                alert("GPS connection failed. Access permissions restricted.");
             });
         }
     });
 
-    // Handle Quick Save Button
     document.getElementById("save-current-btn").addEventListener("click", () => {
         saveLocation(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
         renderSavedLocations();
     });
-}
-
-async function fetchGeocodeAndLoad(query) {
-    try {
-        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
-        const data = await res.json();
-        if (data.results && data.results.length > 0) {
-            const top = data.results[0];
-            const name = `${top.name}${top.admin1 ? ', ' + top.admin1 : ''}, ${top.country}`;
-            window.currentLocation = { name, lat: top.latitude, lon: top.longitude };
-            localStorage.setItem("last_viewed_location", JSON.stringify(window.currentLocation));
-            document.getElementById("location-input").value = "";
-            triggerWeatherFetch();
-        } else {
-            alert("Location search matches no active stations.");
-        }
-    } catch (e) {
-        console.error("Geocoding failed", e);
-    }
 }
 
 function getSavedLocations() {
@@ -155,7 +112,6 @@ function getSavedLocations() {
 
 function saveLocation(name, lat, lon) {
     let current = getSavedLocations();
-    // Exclude duplicates
     if (!current.some(item => item.name === name || (Math.abs(item.lat - lat) < 0.01 && Math.abs(item.lon - lon) < 0.01))) {
         current.push({ name, lat, lon });
         localStorage.setItem("saved_locations", JSON.stringify(current));
