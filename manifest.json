@@ -1,6 +1,6 @@
 {
   "short_name": "WindyWeather",
-  "name": "WindyWeather",
+  "name": "WindyWeather Pixel Edition",
   "icons": [
     {
       "src": "https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg",
@@ -8,9 +8,9 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": "index.html",
-  "background_color": "#1e293b",
-  "theme_color": "#1e293b",
+  "start_url": "./index.html",
+  "background_color": "#0c0f12",
+  "theme_color": "#0c0f12",
   "display": "standalone",
   "orientation": "portrait"
 }
