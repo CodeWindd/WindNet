@@ -1,37 +1,42 @@
-const defaultLocation = {
-    name: "Chicago, IL",
-    lat: 41.8781,
-    lon: -87.6298
+/* ==========================================================================
+   WINDYWEATHER LOCATION MANAGEMENT MODULE
+   ========================================================================== */
+
+const fallbackLocation = {
+    name: "Dallas, TX",
+    lat: 32.7767,
+    lon: -96.7970
 };
 
-window.currentLocation = { ...defaultLocation };
+window.currentLocation = { ...fallbackLocation };
 
 document.addEventListener("DOMContentLoaded", () => {
-    initLocationService();
+    initLocations();
 });
 
-function initLocationService() {
-    const savedLocs = getSavedLocations();
-    if (savedLocs.length === 0) {
-        saveLocation(defaultLocation.name, defaultLocation.lat, defaultLocation.lon);
-    }
-    
-    const lastSessionLoc = localStorage.getItem("last_viewed_location");
-    if (lastSessionLoc) {
-        try {
-            window.currentLocation = JSON.parse(lastSessionLoc);
-        } catch(e) {
-            window.currentLocation = { ...defaultLocation };
-        }
-    } else {
-        window.currentLocation = { ...defaultLocation };
+function initLocations() {
+    // Hydrate standard configuration if empty
+    const saved = getStoredLocations();
+    if (saved.length === 0) {
+        saveNewLocation(fallbackLocation.name, fallbackLocation.lat, fallbackLocation.lon);
     }
 
-    renderSavedLocations();
+    // Restore last session location
+    const storedLast = localStorage.getItem("last_active_location");
+    if (storedLast) {
+        try {
+            window.currentLocation = JSON.parse(storedLast);
+        } catch (e) {
+            window.currentLocation = { ...fallbackLocation };
+        }
+    }
+
+    renderSavedShelf();
 
     const input = document.getElementById("location-input");
     const suggestions = document.getElementById("suggestions");
 
+    // Dynamic autocomplete suggestion dispatcher
     input.addEventListener("input", debounce(async (e) => {
         const query = e.target.value.trim();
         if (query.length < 3) {
@@ -41,25 +46,26 @@ function initLocationService() {
 
         try {
             const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=en&format=json`);
+            if (!res.ok) return;
+
             const data = await res.json();
-            
             if (data.results && data.results.length > 0) {
                 suggestions.innerHTML = "";
                 data.results.forEach(item => {
                     const country = item.country || "";
-                    const admin1 = item.admin1 || "";
-                    const displayName = `${item.name}${admin1 ? ', ' + admin1 : ''}${country ? ', ' + country : ''}`;
-                    
+                    const state = item.admin1 || "";
+                    const label = `${item.name}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
+
                     const el = document.createElement("div");
                     el.className = "suggestion-item";
-                    el.textContent = displayName;
+                    el.textContent = label;
                     el.addEventListener("click", () => {
                         window.currentLocation = {
-                            name: displayName,
+                            name: label,
                             lat: item.latitude,
                             lon: item.longitude
                         };
-                        localStorage.setItem("last_viewed_location", JSON.stringify(window.currentLocation));
+                        localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
                         suggestions.classList.add("hidden");
                         input.value = "";
                         triggerWeatherFetch();
@@ -71,80 +77,129 @@ function initLocationService() {
                 suggestions.classList.add("hidden");
             }
         } catch (err) {
-            console.warn("Geocoding service skipped: ", err);
+            console.warn("Geocoder query bypassed:", err);
         }
-    }, 400));
+    }, 350));
 
+    // Handle outside clicks to close autocomplete dropdown
     document.addEventListener("click", (e) => {
         if (!input.contains(e.target) && !suggestions.contains(e.target)) {
             suggestions.classList.add("hidden");
         }
     });
 
+    // Handle search triggers
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            const val = input.value.trim();
+            if (val) {
+                fetchLocationByString(val);
+                suggestions.classList.add("hidden");
+            }
+        }
+    });
+
+    // Handle geolocation queries
     document.getElementById("gps-btn").addEventListener("click", () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(position => {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
                 window.currentLocation = {
-                    name: `My Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
+                    name: `Current Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
                     lat: lat,
                     lon: lon
                 };
-                localStorage.setItem("last_viewed_location", JSON.stringify(window.currentLocation));
+                localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
                 triggerWeatherFetch();
             }, () => {
-                alert("GPS connection failed. Access permissions restricted.");
+                alert("Location access denied. Using fallback coordinates.");
             });
         }
     });
 
+    // Save location trigger
     document.getElementById("save-current-btn").addEventListener("click", () => {
-        saveLocation(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
-        renderSavedLocations();
+        saveNewLocation(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
+        renderSavedShelf();
     });
 }
 
-function getSavedLocations() {
-    const list = localStorage.getItem("saved_locations");
-    return list ? JSON.parse(list) : [];
-}
+/**
+ * Fetch Coordinates from Text
+ */
+async function fetchLocationByString(query) {
+    try {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
+        const data = await res.json();
+        if (data.results && data.results.length > 0) {
+            const top = data.results[0];
+            const state = top.admin1 || "";
+            const label = `${top.name}${state ? ', ' + state : ''}, ${top.country}`;
 
-function saveLocation(name, lat, lon) {
-    let current = getSavedLocations();
-    if (!current.some(item => item.name === name || (Math.abs(item.lat - lat) < 0.01 && Math.abs(item.lon - lon) < 0.01))) {
-        current.push({ name, lat, lon });
-        localStorage.setItem("saved_locations", JSON.stringify(current));
+            window.currentLocation = {
+                name: label,
+                lat: top.latitude,
+                lon: top.longitude
+            };
+            localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
+            document.getElementById("location-input").value = "";
+            triggerWeatherFetch();
+        } else {
+            alert("No matching cities found.");
+        }
+    } catch (e) {
+        console.error("Geocoding fetch failed:", e);
     }
 }
 
-function deleteLocation(name) {
-    let current = getSavedLocations();
-    current = current.filter(item => item.name !== name);
-    localStorage.setItem("saved_locations", JSON.stringify(current));
-    renderSavedLocations();
+function getStoredLocations() {
+    const raw = localStorage.getItem("windyweather_saved");
+    return raw ? JSON.parse(raw) : [];
 }
 
-function renderSavedLocations() {
+function saveNewLocation(name, lat, lon) {
+    const list = getStoredLocations();
+    if (!list.some(item => item.name === name)) {
+        list.push({ name, lat, lon });
+        localStorage.setItem("windyweather_saved", JSON.stringify(list));
+    }
+}
+
+function removeLocation(name) {
+    let list = getStoredLocations();
+    list = list.filter(item => item.name !== name);
+    localStorage.setItem("windyweather_saved", JSON.stringify(list));
+    renderSavedShelf();
+}
+
+/**
+ * Hydrates saved locations into UI pills
+ */
+function renderSavedShelf() {
     const container = document.getElementById("saved-list");
     container.innerHTML = "";
-    const list = getSavedLocations();
-    
+
+    const list = getStoredLocations();
     list.forEach(item => {
         const pill = document.createElement("div");
-        pill.className = "saved-pill";
-        pill.innerHTML = `<span>📍 ${item.name}</span><span class="delete-saved" data-name="${item.name}">×</span>`;
-        
+        pill.className = "location-pill";
+        pill.innerHTML = `
+            <span>📍 ${item.name}</span>
+            <span class="delete-pill-cross" data-name="${item.name}">×</span>
+        `;
+
         pill.addEventListener("click", (e) => {
-            if (e.target.classList.contains("delete-saved")) {
+            if (e.target.classList.contains("delete-pill-cross")) {
                 e.stopPropagation();
-                deleteLocation(item.name);
+                removeLocation(item.name);
                 return;
             }
             window.currentLocation = { name: item.name, lat: item.lat, lon: item.lon };
-            localStorage.setItem("last_viewed_location", JSON.stringify(window.currentLocation));
+            localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
             triggerWeatherFetch();
         });
+
         container.appendChild(pill);
     });
 }
