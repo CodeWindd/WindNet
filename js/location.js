@@ -1,6 +1,6 @@
 /* ==========================================================================
-   WINDYWEATHER ENVIRONMENT RESOLVER
-   Coordinates autocomplete configurations and local storage caches
+   WINDYWEATHER REGIONAL COORDINATION SERVICES
+   Autocomplete and dynamic coordinates resolver
    ========================================================================== */
 
 const fallbackLocationCoordinates = {
@@ -12,31 +12,30 @@ const fallbackLocationCoordinates = {
 window.currentLocation = { ...fallbackLocationCoordinates };
 
 document.addEventListener("DOMContentLoaded", () => {
-    initializeLocalCaches();
+    initLocalLocationCaches();
 });
 
-function initializeLocalCaches() {
-    const saved = getCachedLocationsList();
+function initLocalLocationCaches() {
+    const saved = getStoredEnvironmentsList();
     if (saved.length === 0) {
-        cacheLocationRecord(fallbackLocationCoordinates.name, fallbackLocationCoordinates.lat, fallbackLocationCoordinates.lon);
+        saveEnvironmentRecord(fallbackLocationCoordinates.name, fallbackLocationCoordinates.lat, fallbackLocationCoordinates.lon);
     }
 
-    // Restore last session location coordinates
-    const lastCoordinatesRecord = localStorage.getItem("windy_last_active_location");
-    if (lastCoordinatesRecord) {
+    const lastActiveCoordinatesRecord = localStorage.getItem("windy_hollow_active_location");
+    if (lastActiveCoordinatesRecord) {
         try {
-            window.currentLocation = JSON.parse(lastCoordinatesRecord);
+            window.currentLocation = JSON.parse(lastActiveCoordinatesRecord);
         } catch (e) {
             window.currentLocation = { ...fallbackLocationCoordinates };
         }
     }
 
-    renderSavedShelfPills();
+    renderSavedShelfChips();
 
     const input = document.getElementById("location-input");
     const suggestionBox = document.getElementById("suggestions");
 
-    // Dynamic autocomplete suggestion dispatcher
+    // Dynamic geocoding autocomplete query
     input.addEventListener("input", debounce(async (e) => {
         const query = e.target.value.trim();
         if (query.length < 3) {
@@ -65,10 +64,10 @@ function initializeLocalCaches() {
                             lat: item.latitude,
                             lon: item.longitude
                         };
-                        localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
+                        localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
                         suggestionBox.classList.add("hidden");
                         input.value = "";
-                        triggerAtmosphericDiagnosticsUpdate();
+                        triggerAtmosphericRefresh();
                     });
                     suggestionBox.appendChild(row);
                 });
@@ -81,54 +80,54 @@ function initializeLocalCaches() {
         }
     }, 350));
 
-    // Handle outside clicks to close autocomplete dropdown list
+    // Close autocomplete on external page clicks
     document.addEventListener("click", (e) => {
         if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
             suggestionBox.classList.add("hidden");
         }
     });
 
-    // Handle manual text inputs
+    // Keyboard enter search triggers
     input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             const val = input.value.trim();
             if (val) {
-                fetchLocationRecordFromString(val);
+                fetchLocationRecordByString(val);
                 suggestionBox.classList.add("hidden");
             }
         }
     });
 
-    // Handle Geolocation coordinates API
+    // Handle Geolocation Coordinates API
     document.getElementById("gps-btn").addEventListener("click", () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(position => {
                 const lat = position.coords.latitude;
                 const lon = position.coords.longitude;
                 window.currentLocation = {
-                    name: `Location Coordinates (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
+                    name: `Current Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
                     lat: lat,
                     lon: lon
                 };
-                localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
-                triggerAtmosphericDiagnosticsUpdate();
+                localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
+                triggerAtmosphericRefresh();
             }, () => {
-                alert("Location permission denied. Utilizing default coordinates.");
+                alert("Location access denied. Restoring standard coordinate sets.");
             });
         }
     });
 
-    // Handle manual quick save triggers
+    // Handle quick save triggers
     document.getElementById("save-current-btn").addEventListener("click", () => {
-        cacheLocationRecord(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
-        renderSavedShelfPills();
+        saveEnvironmentRecord(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
+        renderSavedShelfChips();
     });
 }
 
 /**
- * Convert manual query text into coordinates
+ * Convert textual queries into standard coordinates
  */
-async function fetchLocationRecordFromString(query) {
+async function fetchLocationRecordByString(query) {
     try {
         const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
         const data = await res.json();
@@ -142,65 +141,65 @@ async function fetchLocationRecordFromString(query) {
                 lat: top.latitude,
                 lon: top.longitude
             };
-            localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
+            localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
             document.getElementById("location-input").value = "";
-            triggerAtmosphericDiagnosticsUpdate();
+            triggerAtmosphericRefresh();
         } else {
-            alert("Location string returned no coordinates.");
+            alert("Specified city query matched no active entries.");
         }
     } catch (e) {
-        console.error("Geocoding fetch operation skipped:", e);
+        console.error("Geocoding coordinates conversion skipped:", e);
     }
 }
 
-function getCachedLocationsList() {
-    const raw = localStorage.getItem("windy_saved_locations_cache");
+function getStoredEnvironmentsList() {
+    const raw = localStorage.getItem("windy_hollow_saved_environments");
     return raw ? JSON.parse(raw) : [];
 }
 
-function cacheLocationRecord(name, lat, lon) {
-    const currentList = getCachedLocationsList();
-    if (!currentList.some(item => item.name === name)) {
-        currentList.push({ name, lat, lon });
-        localStorage.setItem("windy_saved_locations_cache", JSON.stringify(currentList));
+function saveEnvironmentRecord(name, lat, lon) {
+    const list = getStoredEnvironmentsList();
+    if (!list.some(item => item.name === name)) {
+        list.push({ name, lat, lon });
+        localStorage.setItem("windy_hollow_saved_environments", JSON.stringify(list));
     }
 }
 
-function deleteCachedLocation(name) {
-    let currentList = getCachedLocationsList();
-    currentList = currentList.filter(item => item.name !== name);
-    localStorage.setItem("windy_saved_locations_cache", JSON.stringify(currentList));
-    renderSavedShelfPills();
+function deleteEnvironmentRecord(name) {
+    let list = getStoredEnvironmentsList();
+    list = list.filter(item => item.name !== name);
+    localStorage.setItem("windy_hollow_saved_environments", JSON.stringify(list));
+    renderSavedShelfChips();
 }
 
 /**
  * Hydrates saved locations into UI pills
  */
-function renderSavedShelfPills() {
+function renderSavedShelfChips() {
     const container = document.getElementById("saved-list");
     container.innerHTML = "";
 
-    const list = getCachedLocationsList();
+    const list = getStoredEnvironmentsList();
     list.forEach(item => {
-        const pill = document.createElement("div");
-        pill.className = "location-pill";
-        pill.innerHTML = `
+        const chip = document.createElement("div");
+        chip.className = "location-pill";
+        chip.innerHTML = `
             <span>📍 ${item.name}</span>
             <span class="delete-pill-cross" data-name="${item.name}">×</span>
         `;
 
-        pill.addEventListener("click", (e) => {
+        chip.addEventListener("click", (e) => {
             if (e.target.classList.contains("delete-pill-cross")) {
                 e.stopPropagation();
-                deleteCachedLocation(item.name);
+                deleteEnvironmentRecord(item.name);
                 return;
             }
             window.currentLocation = { name: item.name, lat: item.lat, lon: item.lon };
-            localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
-            triggerAtmosphericDiagnosticsUpdate();
+            localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
+            triggerAtmosphericRefresh();
         });
 
-        container.appendChild(pill);
+        container.appendChild(chip);
     });
 }
 
@@ -212,7 +211,7 @@ function debounce(func, delay) {
     };
 }
 
-function triggerAtmosphericDiagnosticsUpdate() {
+function triggerAtmosphericRefresh() {
     if (window.fetchWeatherData) {
         window.fetchWeatherData(window.currentLocation.lat, window.currentLocation.lon);
     }
