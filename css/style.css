@@ -1,13 +1,13 @@
 /* ==========================================================================
    WINDYWEATHER SPECIFICATION STYLESHEET
-   Google Pixel Weather Theme Replication
+   Google Pixel Weather Theme Redesign Integration
    ========================================================================== */
 
 :root {
-    --bg-dark-matte: #0b0e14;
-    --card-matte-slate: #161a22;
+    --bg-dark-matte: #0a0c10;
+    --card-matte-slate: #12151c;
     --material-primary-text: #f0f4f9;
-    --material-secondary-text: #a8b2c1;
+    --material-secondary-text: #9aa5b5;
     --pixel-blue-glow: #38bdf8;
     --pixel-amber-accent: #f59e0b;
     --pixel-alert-red: #f87171;
@@ -44,13 +44,13 @@ body {
 /* Master Layout Constraints */
 .pixel-app-container {
     width: 100%;
-    max-width: 680px;
-    padding: 20px;
+    max-width: 650px;
+    padding: 24px 16px;
     display: flex;
     flex-direction: column;
     gap: 16px;
     box-sizing: border-box;
-    background: rgba(11, 14, 20, 0.45); /* Clear contrast overlay */
+    background: rgba(10, 12, 16, 0.45); /* Clear contrast overlay */
     min-height: 100vh;
 }
 
@@ -63,11 +63,11 @@ h1, h2, h3, h4, p {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 6px;
+    padding: 8px 6px;
 }
 
 .header-city-title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
     letter-spacing: -0.02em;
     color: #ffffff;
@@ -78,8 +78,8 @@ h1, h2, h3, h4, p {
     border: none;
     color: var(--material-primary-text);
     cursor: pointer;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -115,10 +115,10 @@ h1, h2, h3, h4, p {
 
 .search-input-box {
     flex-grow: 1;
-    background: #1e2530;
+    background: #181d26;
     border-radius: 28px;
     padding: 10px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
 }
 
 #location-input {
@@ -135,10 +135,10 @@ h1, h2, h3, h4, p {
 }
 
 .suggestions-list {
-    background: #161a22;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #12151c;
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    max-height: 220px;
+    max-height: 240px;
     overflow-y: auto;
 }
 
@@ -198,8 +198,8 @@ h1, h2, h3, h4, p {
 }
 
 .location-pill {
-    background: #161a22;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: #12151c;
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
     color: var(--material-primary-text);
     padding: 8px 16px;
     border-radius: 20px;
@@ -224,7 +224,7 @@ h1, h2, h3, h4, p {
 /* Hero Atmospheric Layout Panel */
 .pixel-hero-display {
     text-align: center;
-    padding: 24px 12px;
+    padding: 24px 12px 12px 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -247,7 +247,7 @@ h1, h2, h3, h4, p {
 
 .hero-giant-temp {
     font-size: 104px;
-    font-weight: 300;
+    font-weight: 200;
     color: #ffffff;
     letter-spacing: -0.06em;
     line-height: 1;
@@ -322,8 +322,8 @@ h1, h2, h3, h4, p {
 /* Tab Navigation Pill Bar (Rounded 25px) */
 .pixel-pill-navigation {
     display: flex;
-    background: rgba(22, 26, 34, 0.85);
-    border: 1.5px solid rgba(255, 255, 255, 0.06);
+    background: #12151c;
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
     border-radius: 25px; /* Strict specification */
     padding: 4px;
     gap: 4px;
@@ -395,7 +395,7 @@ h1, h2, h3, h4, p {
 /* Master Slate Card Panels */
 .pixel-card {
     background: var(--card-matte-slate);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--standard-border-radius); /* Strict 24px rounding */
     padding: 20px;
     box-sizing: border-box;
@@ -494,6 +494,7 @@ h1, h2, h3, h4, p {
 .solar-time-legend {
     display: flex;
     justify-content: space-between;
+    color: var(--material-secondary-text);
     font-size: 13px;
     font-weight: 600;
 }
