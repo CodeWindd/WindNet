@@ -1,21 +1,20 @@
 /* ==========================================================================
-   WINDYWEATHER CORE STYLESHEET
-   Fullscreen Backdrop & Hollow Frame Design
+   WINDYWEATHER SPECIFICATION STYLESHEET
+   Google Pixel Weather Theme Redesign Integration
    ========================================================================== */
 
 :root {
-    --material-primary-text: #f1f5f9;
-    --material-secondary-text: #cbd5e1;
+    --material-primary-text: #f3f4f6;
+    --material-secondary-text: #9ca3af;
     --pixel-blue: #38bdf8;
-    --pixel-amber: #f59e0b;
+    --pixel-amber: #fbbf24;
     --pixel-danger: #f87171;
-    --font-stack: 'Inter', system-ui, -apple-system, sans-serif;
-    --transition-standard: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    --font-stack: 'Google Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    --transition-standard: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Hollow Border configs */
-    --hollow-border-color: rgba(255, 255, 255, 0.35);
-    --hollow-border-active: rgba(56, 189, 248, 0.6);
-    --hollow-bg: rgba(10, 14, 23, 0.65);
+    /* Pixel Solid Dark-Theme Fills */
+    --pixel-card-bg: rgba(18, 19, 22, 0.94);
+    --pixel-card-border: rgba(255, 255, 255, 0.08);
 }
 
 * {
@@ -37,43 +36,38 @@ body {
     overflow-x: hidden;
 }
 
-/* Clear, crisp fullscreen overlay (provides contrast without blur) */
-.app-fullscreen-wrapper {
+/* Master viewport content area overlay */
+.pixel-viewport-container {
     width: 100%;
-    max-width: 850px;
+    max-width: 800px;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.45);
     min-height: 100vh;
     box-sizing: border-box;
 }
 
-/* Crisp Outline Hollow Frame Class */
-.hollow-card {
-    background: var(--hollow-bg);
-    border: 2px solid var(--hollow-border-color);
-    border-radius: 20px;
-    padding: 20px;
+/* Material 28px Rounded Dark Cards (Matches Warszawa Image) */
+.pixel-card {
+    background: var(--pixel-card-bg);
+    border: 1px solid var(--pixel-card-border);
+    border-radius: 28px; /* High radius design */
+    padding: 22px;
     transition: var(--transition-standard);
-    box-shadow: none; /* Strip standard shadows for hollow outlines */
-    overflow: hidden; /* Fix layout container clipping */
     box-sizing: border-box;
+    overflow: hidden;
 }
 
-.hollow-card:hover {
-    border-color: var(--hollow-border-active);
-}
-
-/* Material Hollow Header & Controls */
-.hollow-header {
+/* Header Autocomplete elements */
+.pixel-app-header {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
-.brand-line {
+.header-top-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -81,53 +75,46 @@ body {
     gap: 16px;
 }
 
-.brand-logo-group {
+.brand-group {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.brand-windsock {
-    width: 44px;
-    height: 44px;
-    animation: wind-sway 4s ease-in-out infinite alternate;
-}
-
-@keyframes wind-sway {
-    0% { transform: translateY(0) rotate(-4deg); }
-    100% { transform: translateY(-3px) rotate(4deg); }
+.brand-logo-icon {
+    width: 40px;
+    height: 40px;
 }
 
 .brand-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
 }
 
-/* Hollow Search Pill */
-.hollow-search-pill {
+/* Autocomplete search bar pill layout */
+.pixel-search-pill-box {
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--hollow-bg);
-    border: 2px solid var(--hollow-border-color);
-    border-radius: 25px;
-    padding: 6px 16px;
+    background: var(--pixel-card-bg);
+    border: 1px solid var(--pixel-card-border);
+    border-radius: 24px;
+    padding: 6px 14px;
     flex-grow: 1;
-    max-width: 440px;
-    transition: var(--transition-standard);
+    max-width: 420px;
 }
 
-.hollow-search-pill:focus-within {
+.pixel-search-pill-box:focus-within {
     border-color: var(--pixel-blue);
-    background: rgba(10, 14, 23, 0.85);
 }
 
-.search-symbol {
-    font-size: 16px;
+.search-icon-gfx {
+    display: flex;
+    align-items: center;
     color: var(--material-secondary-text);
-    margin-right: 12px;
+    margin-right: 10px;
 }
 
 #location-input {
@@ -143,29 +130,30 @@ body {
     color: var(--material-secondary-text);
 }
 
-.hollow-action-circle {
+.gps-trigger-btn {
     background: transparent;
     border: none;
     color: var(--pixel-blue);
-    font-size: 18px;
     cursor: pointer;
     padding: 6px;
     border-radius: 50%;
+    display: flex;
+    align-items: center;
     transition: var(--transition-standard);
 }
 
-.hollow-action-circle:hover {
+.gps-trigger-btn:hover {
     background: rgba(255, 255, 255, 0.08);
 }
 
 /* Autocomplete Suggestion Dropdowns */
-.hollow-suggestions-dropdown {
+.suggestions-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: #0d1117;
-    border: 2px solid var(--hollow-border-color);
+    background: #18191c;
+    border: 1px solid var(--pixel-card-border);
     border-radius: 16px;
     z-index: 100;
     max-height: 240px;
@@ -184,9 +172,9 @@ body {
     color: #ffffff;
 }
 
-/* Saved environments drawer shelf */
-.saved-shelf {
-    padding: 12px 16px;
+/* Saved locations drawer shelf */
+.saved-cities-shelf {
+    padding: 12px 18px;
 }
 
 .shelf-header {
@@ -196,17 +184,17 @@ body {
     margin-bottom: 8px;
 }
 
-.shelf-label {
+.shelf-title {
     font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     font-weight: 700;
     color: var(--material-secondary-text);
 }
 
-.hollow-add-chip {
+.save-location-chip {
     background: transparent;
-    border: 1.5px solid rgba(56, 189, 248, 0.35);
+    border: 1px solid rgba(56, 189, 248, 0.35);
     color: var(--pixel-blue);
     font-size: 11px;
     font-weight: 700;
@@ -216,30 +204,30 @@ body {
     transition: var(--transition-standard);
 }
 
-.hollow-add-chip:hover {
+.save-location-chip:hover {
     background: rgba(56, 189, 248, 0.1);
     border-color: var(--pixel-blue);
 }
 
-.shelf-scroll-row {
+.shelf-row-scroll {
     display: flex;
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
 }
 
-.shelf-scroll-row::-webkit-scrollbar {
+.shelf-row-scroll::-webkit-scrollbar {
     height: 4px;
 }
 
-.shelf-scroll-row::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+.shelf-row-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 2px;
 }
 
 .location-pill {
     background: rgba(255, 255, 255, 0.04);
-    border: 1.5px solid var(--hollow-border-color);
+    border: 1px solid var(--pixel-card-border);
     color: var(--material-primary-text);
     padding: 6px 12px;
     border-radius: 16px;
@@ -254,7 +242,6 @@ body {
 
 .location-pill:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: var(--pixel-blue);
 }
 
 .delete-pill-cross {
@@ -264,92 +251,36 @@ body {
     padding-left: 4px;
 }
 
-/* Location Header Details */
-.hollow-city-identity {
+/* Centered Warszawa City Identity HUD */
+.pixel-hero-identity {
     text-align: center;
     margin-top: 4px;
 }
 
-.city-name-header {
-    font-size: 36px;
-    font-weight: 800;
+.pixel-city-title {
+    font-size: 32px;
+    font-weight: 600;
     color: #ffffff;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em;
 }
 
-.city-coords-subheader {
+.pixel-city-coords {
     font-size: 13px;
     color: var(--material-secondary-text);
     margin-top: 4px;
 }
 
-/* Weather Hero Panel - Crisp and Clean with Hollow Border */
-.current-hero-panel {
-    border-width: 2.5px;
-    background: rgba(10, 14, 23, 0.5);
-}
-
-.current-hero-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.current-temp-row {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.giant-temp-label {
-    font-size: 88px;
-    font-weight: 200;
-    color: #ffffff;
-    letter-spacing: -0.04em;
-    line-height: 1;
-}
-
-.hero-weather-icon {
-    width: 76px;
-    height: 76px;
-}
-
-.current-desc-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 16px;
-}
-
-.condition-desc-text {
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.extremes-lbl-group {
-    display: flex;
-    gap: 12px;
-}
-
-.high-temp-pill {
-    font-weight: bold;
-}
-
-.low-temp-pill {
-    color: var(--material-secondary-text);
-}
-
 /* NWS Emergency Alert Banners */
-.hollow-alerts-container {
+.emergency-alerts-hud {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
 .alert-item-box {
-    background: rgba(239, 68, 68, 0.15);
-    border: 2px solid var(--pixel-danger);
-    border-radius: 16px;
+    background: rgba(248, 113, 113, 0.12);
+    border: 1.5px solid var(--pixel-danger);
+    border-radius: 20px;
     padding: 14px 18px;
     display: flex;
     gap: 14px;
@@ -357,447 +288,6 @@ body {
 }
 
 .alert-warning-symbol {
-    font-size: 24px;
-}
-
-.alert-body h4 {
-    color: #f87171;
-    font-size: 15px;
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-
-.alert-body p {
-    font-size: 13px;
-    color: var(--material-primary-text);
-    line-height: 1.4;
-}
-
-/* 4-Tab Pill Styled Navigation Bar (25px rounded corner) */
-.hollow-tabbar-navigation {
-    display: flex;
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px solid var(--hollow-border-color);
-    border-radius: 25px; /* STRICT 25px rounding */
-    padding: 4px;
-    gap: 4px;
-    overflow-x: auto;
-}
-
-.hollow-tabbar-navigation::-webkit-scrollbar {
-    display: none;
-}
-
-.hollow-tab-btn {
-    flex: 1;
-    min-width: 90px;
-    background: transparent;
-    border: none;
-    color: var(--material-secondary-text);
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    border-radius: 21px; /* Complementary 21px interior rounding */
-    white-space: nowrap;
-    transition: var(--transition-standard);
-}
-
-.hollow-tab-btn.active {
-    background: var(--pixel-blue);
-    color: #000000;
-}
-
-/* Sync Spinner Elements */
-.hollow-sync-spinner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 40px;
-    gap: 16px;
-}
-
-.hollow-loading-circle {
-    width: 38px;
-    height: 38px;
-    border: 3.5px solid rgba(255, 255, 255, 0.1);
-    border-top: 3.5px solid var(--pixel-blue);
-    border-radius: 50%;
-    animation: loader-spin 0.8s linear infinite;
-}
-
-@keyframes loader-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loading-label {
-    font-size: 14px;
-    color: var(--material-secondary-text);
-}
-
-/* Viewport Containers layout */
-.viewport-view {
-    display: none;
-}
-
-.viewport-view.active-view {
-    display: block;
-    animation: reveal-view 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes reveal-view {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.hollow-viewport-area {
-    margin-top: 4px;
-}
-
-/* Custom AI Insights Panel Card */
-.insight-card {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 20px;
-    border-left: 5px solid var(--pixel-blue);
-}
-
-.insight-headline {
+    color: var(--pixel-danger);
     display: flex;
     align-items: center;
-    gap: 12px;
-}
-
-.insight-headline-icon {
-    width: 24px;
-    height: 24px;
-}
-
-.insight-headline h3 {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--pixel-blue);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-}
-
-.insight-card p {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--material-primary-text);
-    word-wrap: break-word; /* Strict overflow wrap */
-}
-
-/* Instrument Metrics Grid */
-.hollow-dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-}
-
-@media (max-width: 600px) {
-    .hollow-dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.instrument-metric {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 150px;
-    
-    /* Strict Padding bounds preventing rounded box collisions */
-    padding: 20px;
-    overflow: hidden;
-}
-
-.instrument-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.instrument-label {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--material-secondary-text);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.instrument-icon {
-    width: 32px;
-    height: 32px;
-}
-
-.instrument-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 16px;
-}
-
-.instrument-bottom h4 {
-    font-size: 28px;
-    font-weight: 300;
-    color: #ffffff;
-    line-height: 1.2;
-}
-
-.instrument-subtext {
-    font-size: 12px;
-    color: var(--material-secondary-text);
-    word-wrap: break-word; /* Fixes text overflow layout clipping */
-}
-
-/* Solar Trajectory Visuals */
-.astronomical-card {
-    grid-column: span 2;
-}
-
-@media (max-width: 600px) {
-    .astronomical-card {
-        grid-column: span 1;
-    }
-}
-
-.astronomical-arc-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 12px;
-}
-
-.astronomical-arc-svg {
-    width: 100%;
-    height: 90px;
-}
-
-.sun-glow {
-    animation: sun-pulse 3s ease-in-out infinite alternate;
-}
-
-@keyframes sun-pulse {
-    0% { r: 5.5; fill: #f59e0b; }
-    100% { r: 7.5; fill: #fbbf24; filter: drop-shadow(0 0 3px #fbbf24); }
-}
-
-.astronomical-time-legend {
-    display: flex;
-    justify-content: space-between;
-}
-
-.astro-time-milestone {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-}
-
-.inline-astro-ico {
-    width: 22px;
-    height: 22px;
-}
-
-/* Hourly scrolling timelines */
-.forecast-container-card {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.forecast-section-title {
-    font-size: 16px;
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.hourly-horizontal-scroll {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding: 10px 0;
-}
-
-.hourly-horizontal-scroll::-webkit-scrollbar {
-    height: 4px;
-}
-
-.hourly-horizontal-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 2px;
-}
-
-.hourly-column-tile {
-    flex: 0 0 76px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 6px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1.5px solid var(--hollow-border-color);
-    border-radius: 16px;
-    transition: var(--transition-standard);
-}
-
-.hourly-column-tile:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--pixel-blue);
-}
-
-.hourly-tile-hour {
-    font-size: 13px;
-    color: var(--material-secondary-text);
-    font-weight: 600;
-}
-
-.hourly-tile-gfx {
-    width: 40px;
-    height: 40px;
-}
-
-.hourly-tile-temp {
-    font-size: 16px;
-    font-weight: bold;
-}
-
-.hourly-tile-precip {
-    font-size: 10px;
-    color: var(--pixel-blue);
-    font-weight: 700;
-}
-
-/* Daily Range Visual Sliders */
-.daily-vertical-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.daily-row-frame {
-    display: grid;
-    grid-template-columns: 110px 40px 30px 1fr 30px 40px;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 16px;
-    border: 1.5px solid var(--hollow-border-color);
-    overflow: hidden; /* Prevent visual overflow issues */
-}
-
-@media (max-width: 500px) {
-    .daily-row-frame {
-        grid-template-columns: 80px 36px 24px 1fr 24px 36px;
-        gap: 8px;
-        padding: 8px 10px;
-    }
-}
-
-.daily-day-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: #ffffff;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.daily-row-gfx {
-    width: 36px;
-    height: 36px;
-}
-
-.daily-precip-label {
-    font-size: 11px;
-    color: var(--pixel-blue);
-    font-weight: 700;
-    text-align: center;
-}
-
-.daily-min-label {
-    font-size: 13px;
-    color: var(--material-secondary-text);
-    text-align: right;
-}
-
-.daily-max-label {
-    font-size: 13px;
-    color: #ffffff;
-    font-weight: 700;
-}
-
-/* Temperature Visual Sliders */
-.temp-slider-visual-track {
-    position: relative;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 3px;
-    overflow: hidden;
-    width: 100%;
-}
-
-.active-range-fill-track {
-    position: absolute;
-    height: 100%;
-    background: linear-gradient(to right, var(--pixel-blue), var(--pixel-amber));
-    border-radius: 3px;
-}
-
-/* Spacious Radar Card View */
-.spacious-radar-card {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.radar-header {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.radar-main-title {
-    font-size: 17px;
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.radar-sub-title {
-    font-size: 12px;
-    color: var(--material-secondary-text);
-}
-
-/* Bigger Spacious full-height frame box */
-.radar-spacious-iframe-wrapper {
-    position: relative;
-    width: 100%;
-    height: 500px; /* Spacious dimensions */
-    border-radius: 16px;
-    overflow: hidden;
-    border: 2.5px solid var(--hollow-border-color);
-}
-
-@media (max-width: 600px) {
-    .radar-spacious-iframe-wrapper {
-        height: 360px;
-    }
-}
-
-.radar-spacious-iframe-wrapper iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: #0d1117;
-}
-
-.hidden {
-    display: none !important;
-}
