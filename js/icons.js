@@ -1,6 +1,6 @@
 /* ==========================================================================
    WINDYWEATHER ICONS INTERFACE MODULE
-   Exhaustive key-value dictionary and string normalization for 50 icons
+   Strict key-value bindings for all 50 animated icons
    ========================================================================== */
 
 window.WEATHER_ICONS = {
@@ -68,56 +68,55 @@ window.WEATHER_ICONS = {
 };
 
 /**
- * Resolves descriptions to one of the 50 assets.
- * Strips all moisture features if the probability of precipitation < 20%.
+ * Parses descriptions to select the correct icon.
+ * Cleans out precipitation markers if probability < 20%.
  */
-window.getWeatherIcon = function(textStr, isDayTime = true, precipPercentage = 0) {
-    let cleanText = (textStr || "").toLowerCase().trim();
+window.getWeatherIcon = function(conditionText, isDay = true, precipPercent = 0) {
+    let cleanText = (conditionText || "").toLowerCase().trim();
 
-    // Force strict override if precipitation probability is below 20%
-    if (precipPercentage !== null && precipPercentage < 20) {
-        // Strip out words implying storm or rain
+    // STRICT OVERRIDE: If precip probability is under 20%, clean forecast text
+    if (precipPercent !== null && precipPercent < 20) {
         cleanText = cleanText.replace(/(heavy|moderate|light|patchy|scattered|isolated|slight chance of)?\s*(rain|shower|drizzle|snow|thunderstorm|tstorm|hail|sleet|precip|flurries)/gi, "").trim();
         if (cleanText === "" || cleanText.includes("chance") || cleanText.includes("likely") || cleanText.includes("slight")) {
             cleanText = "partly cloudy";
         }
     }
 
-    // Extreme environmental attributes
+    // Severe conditions
     if (cleanText.includes("tornado")) return window.WEATHER_ICONS.tornado;
     if (cleanText.includes("hurricane") || cleanText.includes("typhoon") || cleanText.includes("tropical storm")) return window.WEATHER_ICONS.hurricane;
 
-    // Atmospheric features
+    // Atmosphere features
     if (cleanText.includes("dust") && cleanText.includes("wind")) return window.WEATHER_ICONS.dustWind;
     if (cleanText.includes("dust")) return window.WEATHER_ICONS.dust;
     if (cleanText.includes("smoke")) return window.WEATHER_ICONS.smoke;
     if (cleanText.includes("haze")) return window.WEATHER_ICONS.haze;
-    if (cleanText.includes("fog")) return isDayTime ? window.WEATHER_ICONS.fogDay : window.WEATHER_ICONS.fogNight;
+    if (cleanText.includes("fog")) return isDay ? window.WEATHER_ICONS.fogDay : window.WEATHER_ICONS.fogNight;
     if (cleanText.includes("mist")) return window.WEATHER_ICONS.mist;
 
-    // Wind attributes
+    // Wind dynamics
     if (cleanText.includes("windy") || cleanText.includes("breezy") || cleanText.includes("gale") || cleanText.includes("squall")) {
         return window.WEATHER_ICONS.wind;
     }
 
-    // Thunderstorms
+    // Storm developments
     if (cleanText.includes("thunderstorm") || cleanText.includes("t-storm") || cleanText.includes("tstorm")) {
         if (cleanText.includes("rain") || cleanText.includes("heavy")) {
-            return isDayTime ? window.WEATHER_ICONS.thunderstormsDayRain : window.WEATHER_ICONS.thunderstormsNightRain;
+            return isDay ? window.WEATHER_ICONS.thunderstormsDayRain : window.WEATHER_ICONS.thunderstormsNightRain;
         }
-        return isDayTime ? window.WEATHER_ICONS.thunderstormsDay : window.WEATHER_ICONS.thunderstormsNight;
+        return isDay ? window.WEATHER_ICONS.thunderstormsDay : window.WEATHER_ICONS.thunderstormsNight;
     }
 
-    // Hail and Sleet
+    // Sleet and Hail
     if (cleanText.includes("hail")) {
-        return isDayTime ? window.WEATHER_ICONS.partlyCloudyDayHail : window.WEATHER_ICONS.partlyCloudyNightHail;
+        return isDay ? window.WEATHER_ICONS.partlyCloudyDayHail : window.WEATHER_ICONS.partlyCloudyNightHail;
     }
     if (cleanText.includes("sleet") || cleanText.includes("freezing rain")) return window.WEATHER_ICONS.sleet;
 
-    // Winter Snow configurations
+    // Snow elements
     if (cleanText.includes("snow") || cleanText.includes("flurries") || cleanText.includes("blizzard")) {
         if (cleanText.includes("partly") || cleanText.includes("scattered") || cleanText.includes("isolated")) {
-            return isDayTime ? window.WEATHER_ICONS.partlyCloudyDaySnow : window.WEATHER_ICONS.partlyCloudyNightSnow;
+            return isDay ? window.WEATHER_ICONS.partlyCloudyDaySnow : window.WEATHER_ICONS.partlyCloudyNightSnow;
         }
         return window.WEATHER_ICONS.snow;
     }
@@ -125,30 +124,30 @@ window.getWeatherIcon = function(textStr, isDayTime = true, precipPercentage = 0
     // Rainy profiles
     if (cleanText.includes("drizzle")) {
         if (cleanText.includes("partly") || cleanText.includes("scattered")) {
-            return isDayTime ? window.WEATHER_ICONS.partlyCloudyDayDrizzle : window.WEATHER_ICONS.partlyCloudyNightDrizzle;
+            return isDay ? window.WEATHER_ICONS.partlyCloudyDayDrizzle : window.WEATHER_ICONS.partlyCloudyNightDrizzle;
         }
         return window.WEATHER_ICONS.drizzle;
     }
     if (cleanText.includes("rain") || cleanText.includes("shower")) {
         if (cleanText.includes("partly") || cleanText.includes("scattered") || cleanText.includes("patchy") || cleanText.includes("isolated")) {
-            return isDayTime ? window.WEATHER_ICONS.partlyCloudyDayRain : window.WEATHER_ICONS.partlyCloudyNightRain;
+            return isDay ? window.WEATHER_ICONS.partlyCloudyDayRain : window.WEATHER_ICONS.partlyCloudyNightRain;
         }
         return window.WEATHER_ICONS.rain;
     }
 
-    // Overcast profiles
-    if (cleanText.includes("overcast")) return isDayTime ? window.WEATHER_ICONS.overcastDay : window.WEATHER_ICONS.overcastNight;
+    // Cloud layers
+    if (cleanText.includes("overcast")) return isDay ? window.WEATHER_ICONS.overcastDay : window.WEATHER_ICONS.overcastNight;
     if (cleanText.includes("mostly cloudy") || cleanText.includes("broken")) return window.WEATHER_ICONS.cloudy;
     if (cleanText.includes("partly cloudy") || cleanText.includes("partly sunny") || cleanText.includes("scattered clouds")) {
-        return isDayTime ? window.WEATHER_ICONS.partlyCloudyDay : window.WEATHER_ICONS.partlyCloudyNight;
+        return isDay ? window.WEATHER_ICONS.partlyCloudyDay : window.WEATHER_ICONS.partlyCloudyNight;
     }
     if (cleanText.includes("cloudy")) return window.WEATHER_ICONS.cloudy;
 
-    // Clear and Sunny configurations
+    // Clear profiles
     if (cleanText.includes("sunny") || cleanText.includes("clear") || cleanText.includes("fair")) {
-        return isDayTime ? window.WEATHER_ICONS.clearDay : window.WEATHER_ICONS.clearNight;
+        return isDay ? window.WEATHER_ICONS.clearDay : window.WEATHER_ICONS.clearNight;
     }
 
-    // Universal clear fallback
-    return isDayTime ? window.WEATHER_ICONS.clearDay : window.WEATHER_ICONS.clearNight;
+    // Fallback
+    return isDay ? window.WEATHER_ICONS.clearDay : window.WEATHER_ICONS.clearNight;
 };
