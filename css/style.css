@@ -1,74 +1,106 @@
 /* ==========================================================================
    WINDYWEATHER SPECIFICATION STYLESHEET
-   Google Pixel Weather Theme Redesign Integration
+   Immersive Full Screen Backdrop & Hollow Frames Wireframe Layout
    ========================================================================== */
 
 :root {
-    --bg-dark-sky: #0c0f12;
-    --material-container: rgba(28, 30, 33, 0.82);
-    --material-border: rgba(255, 255, 255, 0.08);
-    --material-primary-text: #e2e8f0;
-    --material-secondary-text: #94a3b8;
+    --wireframe-border: 1.5px solid rgba(255, 255, 255, 0.25);
+    --wireframe-border-glow: 1.5px solid rgba(56, 189, 248, 0.4);
+    --wireframe-glass-bg: rgba(0, 0, 0, 0.35);
+    --primary-white: #f8fafc;
+    --subtle-text: #94a3b8;
     --pixel-blue: #38bdf8;
     --pixel-amber: #f59e0b;
     --pixel-danger: #ef4444;
-    --font-stack: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --glass-blur: blur(12px);
     --transition-standard: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    --glass-blur: blur(20px);
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: var(--font-stack);
+    font-family: var(--font-family);
     -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background-color: var(--bg-dark-sky);
-    color: var(--material-primary-text);
+    background-color: #000000;
+    color: var(--primary-white);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     overflow-x: hidden;
+    position: relative;
 }
 
-/* Fluid Atmospheric Sky Gradient background system */
-.sky-fluid-atmosphere-gradient {
+/* Immersive Full Screen Background */
+.full-screen-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -2;
-    background: radial-gradient(circle at top, #1e1b4b 0%, #090d16 100%);
-    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    object-fit: cover;
+    z-index: -10;
+    filter: brightness(0.35) contrast(1.1);
+    transition: filter 1.5s ease-in-out;
 }
 
-/* Primary Workspace Wrapper and Alignment */
-.pixel-root-wrapper {
+/* Ambient Particles System Canvas */
+.weather-particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -5;
+    overflow: hidden;
+}
+
+.ambient-particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+}
+
+/* Master Layout Grid Constraints */
+.wireframe-app-container {
     width: 100%;
-    max-width: 900px;
+    max-width: 860px;
     padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    box-sizing: border-box;
 }
 
-/* Material Typography configurations */
-h1, h2, h3, h4, p {
-    margin: 0;
+/* Outlines & Glassmorphic Wireframes */
+.hollow-card {
+    background: var(--wireframe-glass-bg);
+    border: var(--wireframe-border);
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: var(--glass-blur);
+    box-sizing: border-box;
+    transition: var(--transition-standard);
 }
 
-/* Material Header & Search Components */
-.pixel-app-header-container {
+.hollow-card:hover {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+/* Hollow Header & Controls */
+.hollow-header {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.app-identity-brand-row {
+.brand-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -76,55 +108,56 @@ h1, h2, h3, h4, p {
     gap: 16px;
 }
 
-.brand-group {
+.brand-logo-group {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.brand-windsock-logo {
-    width: 48px;
-    height: 48px;
+.windsock-wire-logo {
+    width: 44px;
+    height: 44px;
     transform-origin: center;
-    animation: wind-sway 5s ease-in-out infinite alternate;
+    animation: sway 6s ease-in-out infinite alternate;
 }
 
-@keyframes wind-sway {
+@keyframes sway {
     0% { transform: translateY(0) rotate(0deg); }
-    100% { transform: translateY(-3px) rotate(8deg); }
+    100% { transform: translateY(-4px) rotate(8deg); }
 }
 
-.brand-label-text {
+.brand-name-text {
     font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
-/* Search bar design layout */
-.pixel-search-pill-wrapper {
+/* Wireframe Search Bar Pill */
+.hollow-search-pill {
     position: relative;
     display: flex;
     align-items: center;
-    background: var(--material-container);
-    border: 1px solid var(--material-border);
+    background: var(--wireframe-glass-bg);
+    border: var(--wireframe-border);
     border-radius: 28px;
     padding: 6px 16px;
     flex-grow: 1;
-    max-width: 460px;
+    max-width: 440px;
     transition: var(--transition-standard);
     backdrop-filter: var(--glass-blur);
 }
 
-.pixel-search-pill-wrapper:focus-within {
+.hollow-search-pill:focus-within {
     border-color: var(--pixel-blue);
-    background: rgba(30, 41, 59, 0.95);
-    box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.2);
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
 }
 
-.pill-search-symbol {
+.search-indicator-ico {
     font-size: 16px;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
     margin-right: 12px;
 }
 
@@ -138,10 +171,10 @@ h1, h2, h3, h4, p {
 }
 
 #location-input::placeholder {
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
 }
 
-.pill-action-circle-btn {
+.hollow-action-circle {
     background: transparent;
     border: none;
     color: var(--pixel-blue);
@@ -152,23 +185,23 @@ h1, h2, h3, h4, p {
     transition: var(--transition-standard);
 }
 
-.pill-action-circle-btn:hover {
+.hollow-action-circle:hover {
     background: rgba(255, 255, 255, 0.08);
 }
 
-/* Autocomplete search results list dropdown */
-.geocoder-dropdown-list {
+/* Autocomplete suggestions box dropdown */
+.hollow-suggestions-box {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: #181a1e;
-    border: 1px solid var(--material-border);
+    background: #000000;
+    border: var(--wireframe-border);
     border-radius: 20px;
     z-index: 100;
-    max-height: 250px;
+    max-height: 240px;
     overflow-y: auto;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
     backdrop-filter: var(--glass-blur);
 }
 
@@ -184,31 +217,31 @@ h1, h2, h3, h4, p {
     color: #ffffff;
 }
 
-/* Saved locations drawer shelf card */
-.saved-shelf-card-box {
-    background: rgba(28, 30, 33, 0.4);
-    border: 1px solid var(--material-border);
+/* Saved Drawer Tray Box */
+.saved-tray-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: var(--wireframe-border);
     border-radius: 20px;
     padding: 14px 18px;
     backdrop-filter: var(--glass-blur);
 }
 
-.shelf-header-bar {
+.saved-tray-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.shelf-section-title {
+.saved-tray-label {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 700;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
 }
 
-.save-current-location-chip {
+.save-pill-outline {
     background: transparent;
     border: 1.5px solid rgba(56, 189, 248, 0.35);
     color: var(--pixel-blue);
@@ -220,31 +253,31 @@ h1, h2, h3, h4, p {
     transition: var(--transition-standard);
 }
 
-.save-current-location-chip:hover {
+.save-pill-outline:hover {
     background: rgba(56, 189, 248, 0.1);
     border-color: var(--pixel-blue);
 }
 
-.shelf-scrollable-chips-row {
+.saved-chips-scrollway {
     display: flex;
     gap: 10px;
     overflow-x: auto;
     padding-bottom: 6px;
 }
 
-.shelf-scrollable-chips-row::-webkit-scrollbar {
+.saved-chips-scrollway::-webkit-scrollbar {
     height: 4px;
 }
 
-.shelf-scrollable-chips-row::-webkit-scrollbar-thumb {
+.saved-chips-scrollway::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.12);
     border-radius: 2px;
 }
 
 .location-pill {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--material-border);
-    color: var(--material-primary-text);
+    background: transparent;
+    border: var(--wireframe-border);
+    color: var(--primary-white);
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 13px;
@@ -257,7 +290,6 @@ h1, h2, h3, h4, p {
 }
 
 .location-pill:hover {
-    background: rgba(255, 255, 255, 0.1);
     border-color: var(--pixel-blue);
     transform: translateY(-1px);
 }
@@ -267,163 +299,119 @@ h1, h2, h3, h4, p {
     font-weight: bold;
     cursor: pointer;
     padding-left: 6px;
-    transition: color 0.2s;
+    transition: var(--transition-standard);
 }
 
 .delete-pill-cross:hover {
     color: #ff8a8a;
 }
 
-/* Location Header label alignments */
-.pixel-city-coordinates-hud {
+/* Location Identity Subheader */
+.hollow-city-identity {
     text-align: center;
     margin-top: 8px;
 }
 
-.current-city-title-label {
+.city-name-header {
     font-size: 38px;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.03em;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.6);
 }
 
-.current-city-latlon-label {
+.city-coords-subheader {
     font-size: 13px;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
     margin-top: 6px;
     letter-spacing: 0.02em;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.6);
 }
 
-/* Master visual graphic canvas and Backdrop controls */
-.pixel-backdrop-visualizer-container {
-    position: relative;
-    border-radius: 28px;
-    overflow: hidden;
-    height: 380px;
-    background: #0f172a;
-    border: 1px solid var(--material-border);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-}
-
-.backdrop-image-mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-}
-
-.backdrop-img-asset {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.8;
-}
-
-/* Overlaying Text details and layout overlays */
-.visualizer-metrics-summary-box {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 2;
-    background: linear-gradient(to top, rgba(12, 15, 18, 0.98) 0%, rgba(12, 15, 18, 0.4) 65%, transparent 100%);
+/* Immersive Hero Weather Card */
+.hollow-visualizer-card {
+    background: var(--wireframe-glass-bg);
+    border: var(--wireframe-border);
+    border-radius: 24px;
     padding: 28px;
+    backdrop-filter: var(--glass-blur);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
-    gap: 6px;
 }
 
-.temp-condition-row {
+.hero-temp-column {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
-.visualizer-giant-temp-value {
-    font-size: 96px;
+.hero-giant-temp {
+    font-size: 110px;
     font-weight: 200;
     color: #ffffff;
     letter-spacing: -0.05em;
     line-height: 1;
+    text-shadow: 0 8px 24px rgba(0,0,0,0.5);
 }
 
-.visualizer-weather-state-gfx {
-    width: 84px;
-    height: 84px;
-}
-
-.condition-extremes-row {
+.hero-condition-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    font-size: 16px;
+    gap: 16px;
 }
 
-.visualizer-condition-label {
+.hero-weather-icon {
+    width: 90px;
+    height: 90px;
+}
+
+.hero-status-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hero-condition-text {
+    font-size: 18px;
     font-weight: 700;
     color: #ffffff;
-    letter-spacing: -0.01em;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 
-.extremes-lbl-group {
+.hero-extremes {
     display: flex;
-    gap: 14px;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--subtle-text);
 }
 
-.extreme-pill-high {
-    font-weight: bold;
-    color: #ffffff;
-}
-
-.extreme-pill-low {
-    color: var(--material-secondary-text);
-}
-
-/* Procedural Canvas Overlays */
-.weather-procedural-particle-effects-layer {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 2;
-    overflow: hidden;
-}
-
-.weather-particle {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.4);
-    pointer-events: none;
-    border-radius: 50%;
-}
-
-/* NWS Emergency Warnings dashboard */
-.nws-active-emergency-alerts-hub {
+/* Severe Warnings Panel */
+.hollow-alerts-stack {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.alert-item-box {
-    background: rgba(239, 68, 68, 0.12);
+.alert-wireframe-item {
+    background: rgba(239, 68, 68, 0.1);
     border: 1.5px solid var(--pixel-danger);
     border-radius: 20px;
     padding: 16px 20px;
     display: flex;
     gap: 16px;
     align-items: flex-start;
-    animation: alert-pulse 4s ease-in-out infinite alternate;
+    animation: pulse-border 3s ease-in-out infinite alternate;
 }
 
-@keyframes alert-pulse {
-    0% { transform: scale(1); }
-    100% { transform: scale(1.01); }
+@keyframes pulse-border {
+    0% { border-color: var(--pixel-danger); }
+    100% { border-color: rgba(239, 68, 68, 0.4); }
 }
 
-.alert-warning-symbol {
+.alert-symbol {
     font-size: 26px;
 }
 
@@ -436,15 +424,15 @@ h1, h2, h3, h4, p {
 
 .alert-body p {
     font-size: 13.5px;
-    color: var(--material-primary-text);
+    color: var(--primary-white);
     line-height: 1.45;
 }
 
-/* Google Styled Pill Selection tab layout */
-.pixel-pill-navigation-tabs-container {
+/* Hollow Pill Navigation Tabs */
+.hollow-pill-tabs-bar {
     display: flex;
-    background: rgba(30, 33, 37, 0.5);
-    border: 1px solid var(--material-border);
+    background: rgba(0, 0, 0, 0.4);
+    border: var(--wireframe-border);
     border-radius: 28px;
     padding: 4px;
     gap: 4px;
@@ -452,16 +440,16 @@ h1, h2, h3, h4, p {
     backdrop-filter: var(--glass-blur);
 }
 
-.pixel-pill-navigation-tabs-container::-webkit-scrollbar {
+.hollow-pill-tabs-bar::-webkit-scrollbar {
     display: none;
 }
 
-.tab-pill-navigation-btn {
+.tab-button-hollow {
     flex: 1;
     min-width: 110px;
     background: transparent;
     border: none;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
     padding: 12px 16px;
     font-size: 13px;
     font-weight: 700;
@@ -471,13 +459,15 @@ h1, h2, h3, h4, p {
     transition: var(--transition-standard);
 }
 
-.tab-pill-navigation-btn.active {
-    background: var(--pixel-blue);
-    color: #0c0f12;
+.tab-button-hollow.active {
+    background: transparent;
+    border: 1.5px solid var(--pixel-blue);
+    color: var(--pixel-blue);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
 }
 
-/* Loading HUD controls */
-.pixel-loading-shroud-overlay {
+/* Material Spinner Loader Overlay */
+.hollow-loader-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -485,34 +475,33 @@ h1, h2, h3, h4, p {
     gap: 16px;
 }
 
-.material-loading-spinner-circle {
+.wireframe-spinner {
     width: 44px;
     height: 44px;
-    border: 4.5px solid rgba(255, 255, 255, 0.08);
-    border-top: 4.5px solid var(--pixel-blue);
+    border: 4px solid rgba(255, 255, 255, 0.08);
+    border-top: 4px solid var(--pixel-blue);
     border-radius: 50%;
-    animation: speed-spin 0.7s linear infinite;
+    animation: spin 0.8s linear infinite;
 }
 
-@keyframes speed-spin {
+@keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-.loading-state-caption-label {
+.loader-caption {
     font-size: 14px;
-    color: var(--material-secondary-text);
-    letter-spacing: 0.01em;
+    color: var(--subtle-text);
 }
 
-/* Dynamic workspace container frames */
-.workspace-viewport-panel {
+/* Dynamic Workspace Panels */
+.view-panel {
     display: none;
 }
 
-.workspace-viewport-panel.active-panel {
+.view-panel.active-panel {
     display: block;
-    animation: reveal-view 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: reveal-view 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes reveal-view {
@@ -520,38 +509,27 @@ h1, h2, h3, h4, p {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Master Glassmorphism base cards */
-.pixel-material-card {
-    background: var(--material-container);
-    border: 1px solid var(--material-border);
-    border-radius: 24px;
-    padding: 24px;
-    backdrop-filter: var(--glass-blur);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-    box-sizing: border-box;
-}
-
-/* Customized AI summary card layouts */
-.ai-insight-panel-card {
+/* Custom AI Insights Panel Card */
+.insight-wireframe-card {
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 24px;
-    border-left: 5px solid var(--pixel-blue);
+    border-left: 4px solid var(--pixel-blue);
 }
 
-.insight-header-row {
+.insight-header {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.insight-decor-gfx {
+.insight-icon-asset {
     width: 24px;
     height: 24px;
 }
 
-.insight-label-headline {
+.insight-headline {
     font-size: 15px;
     font-weight: 800;
     color: var(--pixel-blue);
@@ -559,35 +537,30 @@ h1, h2, h3, h4, p {
     letter-spacing: 0.06em;
 }
 
-.insight-narrative-paragraph {
+.insight-narrative {
     font-size: 14.5px;
     line-height: 1.55;
-    color: var(--material-primary-text);
+    color: var(--primary-white);
 }
 
-/* Pixel Dashboard cards grid setup */
-.pixel-dashboard-cards-grid {
+/* Instrument Metrics Grid */
+.hollow-instruments-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 }
 
 @media (max-width: 650px) {
-    .pixel-dashboard-cards-grid {
+    .hollow-instruments-grid {
         grid-template-columns: 1fr;
     }
 }
 
-.metric-square-card {
+.instrument-metric-card {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: 160px;
-    transition: transform 0.2s;
-}
-
-.metric-square-card:hover {
-    transform: translateY(-2px);
 }
 
 .metric-top-row {
@@ -596,15 +569,15 @@ h1, h2, h3, h4, p {
     align-items: flex-start;
 }
 
-.metric-panel-title-label {
+.metric-label {
     font-size: 13.5px;
     font-weight: 700;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
 
-.metric-panel-icon-gfx {
+.metric-icon {
     width: 36px;
     height: 36px;
 }
@@ -616,146 +589,141 @@ h1, h2, h3, h4, p {
     margin-top: 24px;
 }
 
-.metric-panel-value-display {
+.metric-value-text {
     font-size: 30px;
     font-weight: 300;
     color: #ffffff;
 }
 
-.metric-panel-sub-label {
+.metric-subtext {
     font-size: 12px;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
 }
 
-/* Astronomy sun trajectory elements */
-.astronomical-wide-card {
+/* Solar Trajectory Visualizer card */
+.wide-span-grid {
     grid-column: span 2;
 }
 
 @media (max-width: 650px) {
-    .astronomical-wide-card {
+    .wide-span-grid {
         grid-column: span 1;
     }
 }
 
-.astronomical-arc-wrapper-box {
+.solar-arc-visualizer {
     display: flex;
     flex-direction: column;
     gap: 16px;
     margin-top: 14px;
 }
 
-.astronomical-arc-svg-viewport {
+.solar-curve-svg {
     width: 100%;
     height: 100px;
 }
 
-.pulsing-sun-glow-effect {
+.pulsing-sun-glow {
     animation: pulse-sun 3s ease-in-out infinite alternate;
 }
 
 @keyframes pulse-sun {
-    0% { r: 5; fill: #f59e0b; }
-    100% { r: 6.5; fill: #fbbf24; filter: drop-shadow(0 0 4px #fbbf24); }
+    0% { r: 5.5; fill: var(--pixel-amber); }
+    100% { r: 7; fill: #f59e0b; filter: drop-shadow(0 0 6px #f59e0b); }
 }
 
-.astronomical-timeline-footer-row {
+.solar-legend-footer {
     display: flex;
     justify-content: space-between;
 }
 
-.astronomical-time-milestone {
+.legend-milestone {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 13px;
-    color: var(--material-primary-text);
+    color: var(--primary-white);
 }
 
-.astro-inline-icon {
+.legend-icon {
     width: 24px;
     height: 24px;
 }
 
-/* Hourly Forecast horizontal scrolling container */
-.hourly-forecast-panel-box {
+/* Hourly scrolling layout */
+.scale-panel-box {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.panel-section-headline-title {
+.panel-section-title {
     font-size: 16px;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.01em;
 }
 
-.hourly-horizontal-overflow-container {
+.hollow-horizontal-scroller {
     display: flex;
     gap: 14px;
     overflow-x: auto;
     padding: 12px 0;
 }
 
-.hourly-horizontal-overflow-container::-webkit-scrollbar {
+.hollow-horizontal-scroller::-webkit-scrollbar {
     height: 5px;
 }
 
-.hourly-horizontal-overflow-container::-webkit-scrollbar-thumb {
+.hollow-horizontal-scroller::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.12);
     border-radius: 4px;
 }
 
-.hourly-scroll-column-box {
+.hourly-timeline-col {
     flex: 0 0 80px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 14px;
     padding: 16px 8px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--material-border);
+    background: transparent;
+    border: var(--wireframe-border);
     border-radius: 20px;
     transition: var(--transition-standard);
 }
 
-.hourly-scroll-column-box:hover {
-    background: rgba(255, 255, 255, 0.05);
+.hourly-timeline-col:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.45);
     transform: translateY(-2px);
 }
 
-.hourly-column-hour-lbl {
+.hourly-hour-lbl {
     font-size: 13px;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
     font-weight: 700;
 }
 
-.hourly-column-icon-gfx {
+.hourly-icon-gfx {
     width: 44px;
     height: 44px;
 }
 
-.hourly-column-temp-lbl {
+.hourly-temp-lbl {
     font-size: 17px;
     font-weight: bold;
     color: #ffffff;
 }
 
-.hourly-column-precip-lbl {
+.hourly-precip-lbl {
     font-size: 10px;
     color: var(--pixel-blue);
     font-weight: 800;
 }
 
-/* Daily Visual range sliders */
-.daily-forecast-panel-box {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.daily-vertical-rows-container {
+/* 7-Day Vertical stack Outlook */
+.hollow-vertical-stack {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -767,9 +735,9 @@ h1, h2, h3, h4, p {
     align-items: center;
     gap: 14px;
     padding: 12px 20px;
-    background: rgba(255, 255, 255, 0.02);
+    background: transparent;
     border-radius: 18px;
-    border: 1px solid var(--material-border);
+    border: var(--wireframe-border);
 }
 
 @media (max-width: 550px) {
@@ -800,7 +768,7 @@ h1, h2, h3, h4, p {
 
 .daily-row-temp-min-lbl {
     font-size: 13.5px;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
     text-align: right;
 }
 
@@ -810,7 +778,7 @@ h1, h2, h3, h4, p {
     font-weight: 700;
 }
 
-/* Temperature Track Slider range fill layout */
+/* Daily Range track sliders */
 .daily-temp-slider-visual-track {
     position: relative;
     height: 6px;
@@ -827,54 +795,53 @@ h1, h2, h3, h4, p {
     border-radius: 3px;
 }
 
-/* Massive Radar configurations */
-.radar-panel-card-container {
+/* Spacious Map Viewport Panels */
+.radar-panel-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.radar-hud-header-block {
+.radar-header {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 
-.radar-card-title-text {
+.radar-title {
     font-size: 18px;
     font-weight: 800;
     color: #ffffff;
 }
 
-.radar-card-subtitle-text {
+.radar-subtitle {
     font-size: 12.5px;
-    color: var(--material-secondary-text);
+    color: var(--subtle-text);
 }
 
-/* Big spacious map viewport */
-.radar-spacious-iframe-wrapper {
+.radar-viewport-spacious {
     position: relative;
     width: 100%;
-    height: 520px; /* Spacious configuration */
+    height: 520px;
     border-radius: 20px;
     overflow: hidden;
-    border: 1px solid var(--material-border);
+    border: var(--wireframe-border);
 }
 
 @media (max-width: 600px) {
-    .radar-spacious-iframe-wrapper {
+    .radar-viewport-spacious {
         height: 400px;
     }
 }
 
-.radar-spacious-iframe-wrapper iframe {
+.radar-viewport-spacious iframe {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     border: none;
-    background: #0d1117;
+    background: #000000;
 }
 
 .hidden {
