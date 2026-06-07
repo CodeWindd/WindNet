@@ -21,7 +21,7 @@ function initLocalLocationCaches() {
         saveEnvironmentRecord(fallbackLocationCoordinates.name, fallbackLocationCoordinates.lat, fallbackLocationCoordinates.lon);
     }
 
-    const lastActiveCoordinatesRecord = localStorage.getItem("windy_hollow_active_location");
+    const lastActiveCoordinatesRecord = localStorage.getItem("windy_pixel_active_location");
     if (lastActiveCoordinatesRecord) {
         try {
             window.currentLocation = JSON.parse(lastActiveCoordinatesRecord);
@@ -34,6 +34,17 @@ function initLocalLocationCaches() {
 
     const input = document.getElementById("location-input");
     const suggestionBox = document.getElementById("suggestions");
+    const searchOverlay = document.getElementById("search-overlay");
+
+    // Click handler to open search overlay
+    document.getElementById("search-trigger-btn").addEventListener("click", () => {
+        searchOverlay.classList.remove("hidden");
+    });
+
+    // Close search overlay
+    document.getElementById("close-search-btn").addEventListener("click", () => {
+        searchOverlay.classList.add("hidden");
+    });
 
     // Dynamic geocoding autocomplete query
     input.addEventListener("input", debounce(async (e) => {
@@ -64,9 +75,10 @@ function initLocalLocationCaches() {
                             lat: item.latitude,
                             lon: item.longitude
                         };
-                        localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
+                        localStorage.setItem("windy_pixel_active_location", JSON.stringify(window.currentLocation));
                         suggestionBox.classList.add("hidden");
                         input.value = "";
+                        searchOverlay.classList.add("hidden");
                         triggerAtmosphericRefresh();
                     });
                     suggestionBox.appendChild(row);
@@ -79,13 +91,6 @@ function initLocalLocationCaches() {
             console.warn("Geocoder pipeline bypassed:", err);
         }
     }, 350));
-
-    // Close autocomplete on external page clicks
-    document.addEventListener("click", (e) => {
-        if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
-            suggestionBox.classList.add("hidden");
-        }
-    });
 
     // Keyboard enter search triggers
     input.addEventListener("keydown", (e) => {
@@ -109,10 +114,10 @@ function initLocalLocationCaches() {
                     lat: lat,
                     lon: lon
                 };
-                localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
+                localStorage.setItem("windy_pixel_active_location", JSON.stringify(window.currentLocation));
                 triggerAtmosphericRefresh();
             }, () => {
-                alert("Location access denied. Restoring standard coordinate sets.");
+                alert("Location access denied.");
             });
         }
     });
@@ -141,11 +146,12 @@ async function fetchLocationRecordByString(query) {
                 lat: top.latitude,
                 lon: top.longitude
             };
-            localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
+            localStorage.setItem("windy_pixel_active_location", JSON.stringify(window.currentLocation));
             document.getElementById("location-input").value = "";
+            document.getElementById("search-overlay").classList.add("hidden");
             triggerAtmosphericRefresh();
         } else {
-            alert("Specified city query matched no active entries.");
+            alert("No results found.");
         }
     } catch (e) {
         console.error("Geocoding coordinates conversion skipped:", e);
@@ -153,7 +159,7 @@ async function fetchLocationRecordByString(query) {
 }
 
 function getStoredEnvironmentsList() {
-    const raw = localStorage.getItem("windy_hollow_saved_environments");
+    const raw = localStorage.getItem("windy_pixel_saved_environments");
     return raw ? JSON.parse(raw) : [];
 }
 
@@ -161,14 +167,14 @@ function saveEnvironmentRecord(name, lat, lon) {
     const list = getStoredEnvironmentsList();
     if (!list.some(item => item.name === name)) {
         list.push({ name, lat, lon });
-        localStorage.setItem("windy_hollow_saved_environments", JSON.stringify(list));
+        localStorage.setItem("windy_pixel_saved_environments", JSON.stringify(list));
     }
 }
 
 function deleteEnvironmentRecord(name) {
     let list = getStoredEnvironmentsList();
     list = list.filter(item => item.name !== name);
-    localStorage.setItem("windy_hollow_saved_environments", JSON.stringify(list));
+    localStorage.setItem("windy_pixel_saved_environments", JSON.stringify(list));
     renderSavedShelfChips();
 }
 
@@ -184,7 +190,7 @@ function renderSavedShelfChips() {
         const chip = document.createElement("div");
         chip.className = "location-pill";
         chip.innerHTML = `
-            <span>📍 ${item.name}</span>
+            <span>📍 ${item.name.split(',')[0]}</span>
             <span class="delete-pill-cross" data-name="${item.name}">×</span>
         `;
 
@@ -195,7 +201,8 @@ function renderSavedShelfChips() {
                 return;
             }
             window.currentLocation = { name: item.name, lat: item.lat, lon: item.lon };
-            localStorage.setItem("windy_hollow_active_location", JSON.stringify(window.currentLocation));
+            localStorage.setItem("windy_pixel_active_location", JSON.stringify(window.currentLocation));
+            document.getElementById("search-overlay").classList.add("hidden");
             triggerAtmosphericRefresh();
         });
 
