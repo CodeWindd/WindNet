@@ -2,7 +2,7 @@
    WINDYWEATHER OFFLINE SERVICE WORKER
    ========================================================================== */
 
-const CACHE_NAME = 'windyweather-pixel-cache-v1';
+const CACHE_NAME = 'windyweather-pixel-v2';
 const CORE_ASSETS = [
     './',
     './index.html',
