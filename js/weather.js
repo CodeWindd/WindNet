@@ -1,40 +1,40 @@
 /* ==========================================================================
-   WINDYWEATHER ENGINE SYSTEM
-   Handles coordinates parsing, NWS observations, fallback, and solar paths
+   WINDYWEATHER DISPATCHER CORE MODULE
+   Fetches NWS grids, real-time station parameters, and astro paths
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
-    initTabNavigation();
+    initViewportsTabbar();
     
     // Initial fetch trigger
     window.fetchWeatherData(window.currentLocation.lat, window.currentLocation.lon);
 });
 
 /**
- * Handle Tab pill selections
+ * Handle Tabbar selections
  */
-function initTabNavigation() {
-    const tabs = document.querySelectorAll(".hollow-tab-btn");
-    const views = document.querySelectorAll(".viewport-view");
+function initViewportsTabbar() {
+    const tabs = document.querySelectorAll(".pixel-tab-pill");
+    const viewports = document.querySelectorAll(".pixel-viewport-panel");
 
     tabs.forEach(tab => {
         tab.addEventListener("click", () => {
             tabs.forEach(t => t.classList.remove("active"));
-            views.forEach(v => v.classList.remove("active-view"));
+            viewports.forEach(v => v.classList.remove("active-panel"));
 
             tab.classList.add("active");
             const target = tab.getAttribute("data-tab");
-            const viewPanel = document.getElementById(target);
-            if (viewPanel) {
-                viewPanel.classList.add("active-view");
+            const activePanel = document.getElementById(target);
+            if (activePanel) {
+                activePanel.classList.add("active-panel");
             }
         });
     });
 }
 
 /**
- * Custom day/night twilight solver
- * Corrects the 6:00 PM sunset bug using actual solar zenith angles.
+ * Precise Day/Night Twilight Evaluator
+ * Solves the 6:00 PM sunset daylight calculations bug.
  */
 function isDaytimeAstronomical(latitude, longitude, targetDate) {
     const decHours = targetDate.getHours() + (targetDate.getMinutes() / 60);
@@ -59,31 +59,31 @@ function isDaytimeAstronomical(latitude, longitude, targetDate) {
     const sinElevation = Math.sin(latRad) * Math.sin(solarDecl) + Math.cos(latRad) * Math.cos(solarDecl) * Math.cos(hourAngleRad);
     const elevationDeg = Math.asin(sinElevation) * 180 / Math.PI;
 
-    // Standard astronomical horizon threshold (-0.83 degrees)
+    // Solar horizon refraction boundary threshold (-0.83 degrees)
     return elevationDeg > -0.83;
 }
 
 /**
- * Primary coordinates parser
+ * Core Orchestrator
  */
 window.fetchWeatherData = async function(latitude, longitude) {
-    const loadingHUD = document.getElementById("weather-loader");
-    loadingHUD.classList.remove("hidden");
+    const loader = document.getElementById("weather-loader");
+    loader.classList.remove("hidden");
 
-    // Reset active emergency warning displays
+    // Reset warnings HUD displays
     const alertsBox = document.getElementById("nws-alerts-container");
     alertsBox.innerHTML = "";
     alertsBox.classList.add("hidden");
 
-    document.getElementById("current-city-name").textContent = window.currentLocation.name;
-    document.getElementById("current-coordinates-subtext").textContent = `Latitude: ${latitude.toFixed(4)} | Longitude: ${longitude.toFixed(4)}`;
+    document.getElementById("current-city-name").textContent = window.currentLocation.name.split(',')[0];
+    document.getElementById("current-coordinates-subtext").textContent = `Lat: ${latitude.toFixed(4)} | Lon: ${longitude.toFixed(4)}`;
 
     try {
         const pointsUrl = `https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`;
         const pointsRes = await fetch(pointsUrl, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } });
 
         if (!pointsRes.ok) {
-            throw new Error("Target region lies outside NWS limits. Invoking global backup.");
+            throw new Error("Coordinates lie outside US borders. Switch to global backup.");
         }
 
         const pointsData = await pointsRes.json();
@@ -98,14 +98,14 @@ window.fetchWeatherData = async function(latitude, longitude) {
         ]);
 
         if (!stationsRes.ok || !forecastRes.ok || !forecastHourlyRes.ok) {
-            throw new Error("Local station telemetry down. Invoking global backup.");
+            throw new Error("Station registers returned error. Switch to global backup.");
         }
 
         const stationsData = await stationsRes.json();
         const forecastData = await forecastRes.json();
         const forecastHourlyData = await forecastHourlyRes.json();
 
-        // Extract real-time telemetry logs directly from the nearest station
+        // Get actual real-time telemetry observation logs directly from the nearest active station
         let realTimeTelemetry = null;
         if (stationsData.features && stationsData.features.length > 0) {
             const firstStationId = stationsData.features[0].id;
@@ -116,7 +116,7 @@ window.fetchWeatherData = async function(latitude, longitude) {
                     realTimeTelemetry = obsData.properties;
                 }
             } catch (obsErr) {
-                console.warn("Unable to fetch latest real-time observations, defaulting to hourly forecast estimates.", obsErr);
+                console.warn("Failed to retrieve current real-time observations, using hourly estimates.", obsErr);
             }
         }
 
@@ -128,12 +128,12 @@ window.fetchWeatherData = async function(latitude, longitude) {
         console.warn(err.message);
         fetchGlobalFallback(latitude, longitude);
     } finally {
-        loadingHUD.classList.add("hidden");
+        loader.classList.add("hidden");
     }
 };
 
 /**
- * Pull and display active emergency warnings
+ * Query active emergency alerts from the NWS
  */
 async function fetchNWSAlerts(lat, lon) {
     const alertsBox = document.getElementById("nws-alerts-container");
@@ -151,19 +151,23 @@ async function fetchNWSAlerts(lat, lon) {
             data.features.forEach(feat => {
                 const props = feat.properties;
                 const div = document.createElement("div");
-                div.className = "alert-item-box";
+                div.className = "alert-item-card";
                 div.innerHTML = `
-                    <span class="alert-warning-symbol">⚠️</span>
-                    <div class="alert-body">
+                    <svg class="alert-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <div class="alert-text-body">
                         <h4>${props.event}</h4>
-                        <p>${props.headline || "Active localized emergency warning statement."}</p>
+                        <p>${props.headline || "Active localized emergency statement."}</p>
                     </div>
                 `;
                 alertsBox.appendChild(div);
             });
         }
     } catch (e) {
-        console.warn("Alert pipeline skipped:", e);
+        console.warn("Alert pipeline error:", e);
     }
 }
 
@@ -220,19 +224,15 @@ function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, l
     let todayHigh = "--°";
     let todayLow = "--°";
     if (dailyPeriods && dailyPeriods.length > 0) {
-        todayHigh = `${dailyPeriods[0].temperature}°`;
-        todayLow = dailyPeriods[1] ? `${dailyPeriods[1].temperature}°` : "--°";
+        todayHigh = `${dailyPeriods[0].temperature}`;
+        todayLow = dailyPeriods[1] ? `${dailyPeriods[1].temperature}` : "--";
     }
-    document.getElementById("hero-temp-high").textContent = `H: ${todayHigh}`;
-    document.getElementById("hero-temp-low").textContent = `L: ${todayLow}`;
+    document.getElementById("metric-apparent").textContent = `Feels like ${currentTemp}°`;
+    document.getElementById("hero-temp-range").textContent = `High ${todayHigh}° • Low ${todayLow}°`;
 
-    // Feels Like Card
-    document.getElementById("metric-apparent").textContent = `${currentTemp}°F`;
-    document.getElementById("apparent-eval").textContent = currentTemp < 50 ? "Cool index" : "Pleasant index";
-    
-    // Wind velocity Card
+    // Wind Card
     document.getElementById("metric-wind").textContent = windSpeedVal;
-    document.getElementById("wind-direction-text").textContent = `Trajectory direction: ${hourlyNow.windDirection || 'N'}`;
+    document.getElementById("wind-direction-text").textContent = `Direction: ${hourlyNow.windDirection || 'N'}`;
 
     // Humidity Card
     document.getElementById("metric-humidity").textContent = `${relativeHumidityVal}%`;
@@ -255,7 +255,7 @@ function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, l
     // Build meteorological analysis summary
     buildMeteorologicalInsight(descriptionStr, currentTemp, windSpeedVal, precipChance);
 
-    // Build the 48-hour horizontal scroll columns
+    // Render 48-hour horizontal scroll columns
     const hourlyContainer = document.getElementById("hourly-cards-wrapper");
     hourlyContainer.innerHTML = "";
     
@@ -263,32 +263,23 @@ function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, l
         const itemPrecip = period.probabilityOfPrecipitation?.value || 0;
         const targetDate = new Date(period.startTime);
         const colIsDay = checkNwsIsDay(period);
-        const hourLabel = targetDate.toLocaleTimeString([], { hour: 'numeric' });
+        const hourLabel = targetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
-        const tile = document.createElement("div");
-        tile.className = "hourly-column-tile";
-        tile.innerHTML = `
-            <span class="hourly-tile-hour">${hourLabel}</span>
-            <img class="hourly-tile-gfx" src="${window.getWeatherIcon(period.shortForecast, colIsDay, itemPrecip)}" alt="Weather condition column state">
-            <span class="hourly-tile-temp">${period.temperature}°</span>
-            <span class="hourly-tile-precip">${itemPrecip >= 20 ? itemPrecip + '%' : ''}</span>
+        const column = document.createElement("div");
+        column.className = "hourly-tile-column";
+        column.innerHTML = `
+            <span class="hourly-column-temp">${period.temperature}°</span>
+            <img class="hourly-column-icon" src="${window.getWeatherIcon(period.shortForecast, colIsDay, itemPrecip)}" alt="Hourly Gfx">
+            <span class="hourly-column-precip">${itemPrecip >= 20 ? itemPrecip + '%' : '10%'}</span>
+            <span class="hourly-column-hour">${hourLabel}</span>
         `;
-        hourlyContainer.appendChild(tile);
+        hourlyContainer.appendChild(column);
     });
 
-    // Build the 7-day outlook using custom horizontal range visualizers
+    // Render 10-day outlook horizontal column scroll tiles (matches image layout)
     const dailyContainer = document.getElementById("daily-cards-wrapper");
     dailyContainer.innerHTML = "";
 
-    // Extract weekly absolute temperature boundaries
-    let absoluteMin = 100;
-    let absoluteMax = -100;
-    dailyPeriods.forEach(p => {
-        if (p.temperature < absoluteMin) absoluteMin = p.temperature;
-        if (p.temperature > absoluteMax) absoluteMax = p.temperature;
-    });
-
-    // Pair daytime and nighttime segments for a cleaner grid view
     const weeklySegments = [];
     for (let i = 0; i < dailyPeriods.length; i++) {
         const segment = dailyPeriods[i];
@@ -306,31 +297,27 @@ function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, l
         }
     }
 
-    weeklySegments.forEach(group => {
+    weeklySegments.forEach((group, index) => {
         const primary = group.day || group.night;
-        const nameLabel = primary.name;
+        const nameLabel = index === 0 ? "Today" : primary.name.substring(0, 3);
         const iconURL = window.getWeatherIcon(primary.shortForecast, true, primary.probabilityOfPrecipitation?.value || 0);
 
         const highTemp = group.day ? group.day.temperature : primary.temperature;
         const lowTemp = group.night ? group.night.temperature : primary.temperature;
+        const itemPrecip = primary.probabilityOfPrecipitation?.value || 0;
 
-        const totalSpan = absoluteMax - absoluteMin || 1;
-        const leftPercent = Math.max(0, Math.min(100, ((lowTemp - absoluteMin) / totalSpan) * 100));
-        const widthPercent = Math.max(8, Math.min(100, ((highTemp - lowTemp) / totalSpan) * 100));
-
-        const row = document.createElement("div");
-        row.className = "daily-row-frame";
-        row.innerHTML = `
-            <span class="daily-day-label">${nameLabel}</span>
-            <img class="daily-row-gfx" src="${iconURL}" alt="Weather forecast row state">
-            <span class="daily-precip-label">${primary.probabilityOfPrecipitation?.value >= 20 ? primary.probabilityOfPrecipitation.value + '%' : ''}</span>
-            <span class="daily-min-label">${lowTemp}°</span>
-            <div class="temp-slider-visual-track">
-                <div class="active-range-fill-track" style="left: ${leftPercent}%; width: ${widthPercent}%;"></div>
+        const column = document.createElement("div");
+        column.className = "daily-tile-column";
+        column.innerHTML = `
+            <div class="daily-column-extremes">
+                <span class="daily-column-high">${highTemp}°</span>
+                <span class="daily-column-low">${lowTemp}°</span>
             </div>
-            <span class="daily-max-label">${highTemp}°</span>
+            <img class="daily-column-icon" src="${iconURL}" alt="Daily Gfx">
+            <span class="daily-column-precip">${itemPrecip >= 20 ? itemPrecip + '%' : '10%'}</span>
+            <span class="daily-column-day">${nameLabel}</span>
         `;
-        dailyContainer.appendChild(row);
+        dailyContainer.appendChild(column);
     });
 }
 
@@ -366,10 +353,9 @@ function renderGlobalFallbackWeather(data, lat, lon) {
 
     const highVal = Math.round(data.daily.temperature_2m_max[0]);
     const lowVal = Math.round(data.daily.temperature_2m_min[0]);
-    document.getElementById("hero-temp-high").textContent = `H: ${highVal}°`;
-    document.getElementById("hero-temp-low").textContent = `L: ${lowVal}°`;
+    document.getElementById("metric-apparent").textContent = `Feels like ${Math.round(cur.apparent_temperature)}°`;
+    document.getElementById("hero-temp-range").textContent = `High ${highVal}° • Low ${lowVal}°`;
 
-    document.getElementById("metric-apparent").textContent = `${Math.round(cur.apparent_temperature)}°F`;
     document.getElementById("metric-wind").textContent = `${cur.wind_speed_10m} mph`;
     document.getElementById("metric-humidity").textContent = `${cur.relative_humidity_2m}%`;
     document.getElementById("metric-pressure").textContent = `${(cur.surface_pressure * 0.02953).toFixed(2)} inHg`;
@@ -392,61 +378,48 @@ function renderGlobalFallbackWeather(data, lat, lon) {
     for (let i = 0; i < 48; i++) {
         const targetDate = new Date(data.hourly.time[i]);
         const colIsDay = data.hourly.is_day[i] === 1; // Accurate day/night coordinate tracking
-        const hTimeLabel = targetDate.toLocaleTimeString([], { hour: 'numeric' });
+        const hTimeLabel = targetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
         const hWmo = data.hourly.weather_code[i];
         const hDescription = getWmoCodeLabel(hWmo);
         const hPrecip = data.hourly.precipitation_probability[i];
         const hTemp = Math.round(data.hourly.temperature_2m[i]);
 
-        const tile = document.createElement("div");
-        tile.className = "hourly-column-tile";
-        tile.innerHTML = `
-            <span class="hourly-tile-hour">${hTimeLabel}</span>
-            <img class="hourly-tile-gfx" src="${window.getWeatherIcon(hDescription, colIsDay, hPrecip)}" alt="Weather condition column state">
-            <span class="hourly-tile-temp">${hTemp}°</span>
-            <span class="hourly-tile-precip">${hPrecip >= 20 ? hPrecip + '%' : ''}</span>
+        const column = document.createElement("div");
+        column.className = "hourly-tile-column";
+        column.innerHTML = `
+            <span class="hourly-column-temp">${hTemp}°</span>
+            <img class="hourly-column-icon" src="${window.getWeatherIcon(hDescription, colIsDay, hPrecip)}" alt="Hourly Gfx">
+            <span class="hourly-column-precip">${hPrecip >= 20 ? hPrecip + '%' : '10%'}</span>
+            <span class="hourly-column-hour">${hTimeLabel}</span>
         `;
-        hourlyContainer.appendChild(tile);
+        hourlyContainer.appendChild(column);
     }
 
-    // Build the 7-day outlook using horizontal range visualizers
+    // Build 10-day daily columns
     const dailyContainer = document.getElementById("daily-cards-wrapper");
     dailyContainer.innerHTML = "";
 
-    let absoluteMin = 100;
-    let absoluteMax = -100;
-    for (let i = 0; i < data.daily.time.length; i++) {
-        const mn = Math.round(data.daily.temperature_2m_min[i]);
-        const mx = Math.round(data.daily.temperature_2m_max[i]);
-        if (mn < absoluteMin) absoluteMin = mn;
-        if (mx > absoluteMax) absoluteMax = mx;
-    }
-
     for (let i = 0; i < data.daily.time.length; i++) {
         const dDate = new Date(data.daily.time[i] + 'T00:00:00');
-        const dayLabel = dDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const dayLabel = i === 0 ? "Today" : dDate.toLocaleDateString('en-US', { weekday: 'short' });
         const dWmo = data.daily.weather_code[i];
         const dDescription = getWmoCodeLabel(dWmo);
         const hi = Math.round(data.daily.temperature_2m_max[i]);
         const lo = Math.round(data.daily.temperature_2m_min[i]);
+        const hPrecip = data.hourly.precipitation_probability[i * 24] || 0;
 
-        const totalSpan = absoluteMax - absoluteMin || 1;
-        const leftPercent = Math.max(0, Math.min(100, ((lo - absoluteMin) / totalSpan) * 100));
-        const widthPercent = Math.max(8, Math.min(100, ((hi - lo) / totalSpan) * 100));
-
-        const row = document.createElement("div");
-        row.className = "daily-row-frame";
-        row.innerHTML = `
-            <span class="daily-day-label">${dayLabel}</span>
-            <img class="daily-row-gfx" src="${window.getWeatherIcon(dDescription, true, 0)}" alt="Weather forecast row state">
-            <span class="daily-precip-label"></span>
-            <span class="daily-min-label">${lo}°</span>
-            <div class="temp-slider-visual-track">
-                <div class="active-range-fill-track" style="left: ${leftPercent}%; width: ${widthPercent}%;"></div>
+        const column = document.createElement("div");
+        column.className = "daily-tile-column";
+        column.innerHTML = `
+            <div class="daily-column-extremes">
+                <span class="daily-column-high">${hi}°</span>
+                <span class="daily-column-low">${lo}°</span>
             </div>
-            <span class="daily-max-label">${hi}°</span>
+            <img class="daily-column-icon" src="${window.getWeatherIcon(dDescription, true, 0)}" alt="Daily Gfx">
+            <span class="daily-column-precip">${hPrecip >= 20 ? hPrecip + '%' : '10%'}</span>
+            <span class="daily-column-day">${dayLabel}</span>
         `;
-        dailyContainer.appendChild(row);
+        dailyContainer.appendChild(column);
     }
 }
 
@@ -454,7 +427,7 @@ function renderGlobalFallbackWeather(data, lat, lon) {
  * Draws the dynamic SVG path elements for the sun trajectory
  */
 function updateSolarArcSvgNode(sunriseDate, sunsetDate) {
-    const sunDot = document.getElementById("svg-active-sun");
+    const sunDot = document.getElementById("svg-solar-node");
     if (!sunDot) return;
 
     const now = new Date();
@@ -481,7 +454,7 @@ function updateSolarArcSvgNode(sunriseDate, sunsetDate) {
  * Generates textual insights based on local condition parameters
  */
 function buildMeteorologicalInsight(desc, temp, wind, precip) {
-    let text = `Analysis of localized atmospheric parameters indicates a ${desc.toLowerCase()} layout. `;
+    let text = `Analysis of localized atmospheric parameters indicates a ${desc.toLowerCase()} layout today. `;
     if (temp < 45) {
         text += "Frigid parameters are active. Keep insulated with layered clothing. ";
     } else if (temp > 85) {
