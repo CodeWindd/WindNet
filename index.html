@@ -5,194 +5,193 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WindyWeather | Wireframe Edition</title>
     
-    <!-- Hollow Theme & PWA Configs -->
+    <!-- Hollow Theme Style Sheet -->
     <link rel="stylesheet" href="./css/style.css">
+    
+    <!-- Progressive Web App Configuration -->
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#0a0c10">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg">
     <link rel="icon" type="image/svg+xml" href="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg">
 
-    <!-- Optimization Preconnects -->
+    <!-- Preconnect Optimization -->
     <link rel="preconnect" href="https://cdn.meteocons.com">
     <link rel="preconnect" href="https://api.weather.gov">
     <link rel="preconnect" href="https://api.open-meteo.com">
 </head>
 <body>
-    <!-- Full Screen Master Background Image -->
-    <img src="./backdrop.png" alt="WindyWeather Immersive Backdrop" class="full-screen-backdrop" id="fullscreen-backdrop-img">
-    
-    <!-- Ambient Rain/Snow Particle Layer -->
-    <div class="weather-particles-canvas" id="particles-overlay-canvas"></div>
+    <!-- Full-bleed background layer -->
+    <div class="hollow-fullscreen-backdrop"></div>
 
-    <div class="wireframe-app-container">
+    <div class="hollow-app-container">
         
-        <!-- Header & Wireframe Search Bar -->
+        <!-- Hollow Navigation Header -->
         <header class="hollow-header">
-            <div class="brand-row">
-                <div class="brand-logo-group">
-                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="WindyWeather Logo" class="windsock-wire-logo">
-                    <span class="brand-name-text">WindyWeather</span>
+            <div class="header-brand-row">
+                <div class="brand-badge">
+                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="WindyWeather Logo" class="brand-logo-animation">
+                    <span class="brand-text">WindyWeather</span>
                 </div>
                 
+                <!-- Hollow Search Bar -->
                 <div class="hollow-search-pill">
-                    <span class="search-indicator-ico">🔍</span>
-                    <input type="text" id="location-input" placeholder="Search cities..." autocomplete="off">
-                    <button id="gps-btn" class="hollow-action-circle" title="Find Current Location">📍</button>
-                    <div id="suggestions" class="hollow-suggestions-box hidden"></div>
+                    <span class="search-indicator">🔍</span>
+                    <input type="text" id="location-input" placeholder="Search coordinates..." autocomplete="off" aria-label="Location Search">
+                    <button id="gps-btn" class="hollow-gps-button" title="Locate via GPS">📍</button>
+                    <div id="suggestions" class="hollow-suggestions-dropdown hidden"></div>
                 </div>
             </div>
 
-            <!-- Saved Environment Tray -->
-            <div class="saved-tray-card">
-                <div class="saved-tray-header">
-                    <span class="saved-tray-label">Saved Environments</span>
-                    <button id="save-current-btn" class="save-pill-outline">+ Save Current</button>
+            <!-- Saved Cities Shelf -->
+            <div class="hollow-card shelf-wrapper">
+                <div class="shelf-header">
+                    <span class="shelf-title">Saved Environments</span>
+                    <button id="save-current-btn" class="hollow-add-btn">+ Add Current</button>
                 </div>
-                <div id="saved-list" class="saved-chips-scrollway">
-                    <!-- Loaded dynamically -->
+                <div id="saved-list" class="shelf-scroll-row">
+                    <!-- Hydrated via JS -->
                 </div>
             </div>
         </header>
 
-        <!-- Location Identity Title Panel -->
-        <section class="hollow-city-identity">
-            <h1 id="current-city-name" class="city-name-header">Dallas, TX</h1>
-            <p id="current-coordinates-subtext" class="city-coords-subheader">Coordinates: 32.7767 | -96.7970</p>
+        <!-- Current Location HUD -->
+        <section class="location-hud-display">
+            <h1 id="current-city-name" class="hud-city-title">Dallas, TX</h1>
+            <p id="current-coordinates-subtext" class="hud-coords-subtitle">Latitude: 32.7767 | Longitude: -96.7970</p>
         </section>
 
-        <!-- Immersive Hero Weather Card -->
-        <section class="hollow-visualizer-card">
-            <div class="hero-temp-column">
-                <h2 id="current-temp" class="hero-giant-temp">--°</h2>
-                <div class="hero-condition-row">
-                    <img id="current-weather-icon" src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/clear-day.svg" alt="Current Weather Icon" class="hero-weather-icon">
-                    <div class="hero-status-box">
-                        <span id="current-condition-desc" class="hero-condition-text">Connecting Array...</span>
-                        <div class="hero-extremes">
-                            <span id="hero-temp-high">H: --°</span>
-                            <span id="hero-temp-low">L: --°</span>
-                        </div>
+        <!-- Weather Canvas Visualizer Overlay -->
+        <section class="hollow-card visualizer-frame">
+            <div class="visualizer-content-grid">
+                <div class="temp-display-group">
+                    <h2 id="current-temp" class="visualizer-giant-temp">--°</h2>
+                    <img id="current-weather-icon" src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/clear-day.svg" alt="Atmospheric Condition GFX" class="visualizer-condition-icon">
+                </div>
+                <div class="extremes-display-group">
+                    <span id="current-condition-desc" class="visualizer-condition-label">Awaiting parameters...</span>
+                    <div class="visualizer-extremes-row">
+                        <span id="hero-temp-high" class="extreme-label-high">H: --°</span>
+                        <span id="hero-temp-low" class="extreme-label-low">L: --°</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Emergency Severe Weather Banner -->
+        <!-- Emergency Advisory Hub -->
         <section id="nws-alerts-container" class="hollow-alerts-stack hidden">
-            <!-- Append severe warning alerts here -->
+            <!-- Append dynamic hollow warnings -->
         </section>
 
-        <!-- 4-Tab Hollow Pill Navigation Bar -->
+        <!-- 4-Tab Hollow Navigation Bar -->
         <nav class="hollow-pill-tabs-bar">
-            <button class="tab-button-hollow active" data-tab="tab-current">Current Diagnostics</button>
-            <button class="tab-button-hollow" data-tab="tab-hourly">48-Hour Timeline</button>
-            <button class="tab-button-hollow" data-tab="tab-daily">7-Day Outlook</button>
-            <button class="tab-button-hollow" data-tab="tab-radar">Spacious Radar Map</button>
+            <button class="hollow-tab-btn active" data-tab="view-current">Current Conditions</button>
+            <button class="hollow-tab-btn" data-tab="view-hourly">48-Hour Forecast</button>
+            <button class="hollow-tab-btn" data-tab="view-daily">7-Day Outlook</button>
+            <button class="hollow-tab-btn" data-tab="view-radar">Immersive Radar</button>
         </nav>
 
-        <!-- Hollow Material Spinner -->
-        <div id="weather-loader" class="hollow-loader-container hidden">
-            <div class="wireframe-spinner"></div>
-            <p class="loader-caption">Syncing station metrics...</p>
+        <!-- Dynamic loader -->
+        <div id="weather-loader" class="hollow-loader hidden">
+            <div class="hollow-spinner-ring"></div>
+            <p class="loader-caption">Re-aligning weather diagnostic modules...</p>
         </div>
 
-        <!-- Master Viewports Panel -->
-        <main class="hollow-dashboard-viewports">
+        <!-- Master Viewports -->
+        <main class="hollow-viewports-viewport">
             
-            <!-- VIEWPORT 1: CURRENT CONDITIONS -->
-            <div id="tab-current" class="view-panel active-panel">
-                
-                <!-- Dynamic Analysis Insight Widget -->
-                <div class="hollow-card insight-wireframe-card">
+            <!-- VIEWPORT 1: CURRENT ATMOSPHERE -->
+            <div id="view-current" class="hollow-tab-panel active-panel">
+                <!-- Weather Insight Card -->
+                <div class="hollow-card insight-card">
                     <div class="insight-header">
-                        <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="Windsock" class="insight-icon-asset">
-                        <h3 class="insight-headline">Meteorological Analysis</h3>
+                        <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="Insight analysis icon" class="insight-header-icon">
+                        <h3 class="insight-title-text">Analytical System Insights</h3>
                     </div>
-                    <p id="weather-insight-text" class="insight-narrative">Polling coordinates and mapping indexes...</p>
+                    <p id="weather-insight-text" class="insight-body-text">Running atmospheric metrics calculations...</p>
                 </div>
 
-                <!-- Instrument Metrics Hollow Grid -->
-                <div class="hollow-instruments-grid">
+                <!-- Hollow Metric Grid Blocks -->
+                <div class="hollow-metrics-dashboard-grid">
                     
                     <!-- Feels Like -->
-                    <div class="hollow-card instrument-metric-card">
-                        <div class="metric-top-row">
-                            <span class="metric-label">Feels Like</span>
-                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/thermometer.svg" alt="Thermometer" class="metric-icon">
+                    <div class="hollow-card metric-block-card">
+                        <div class="metric-card-top">
+                            <span class="metric-card-title">Feels Like</span>
+                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/thermometer.svg" alt="Thermometer" class="metric-card-icon">
                         </div>
-                        <div class="metric-bottom-row">
-                            <h4 id="metric-apparent" class="metric-value-text">--°F</h4>
-                            <p class="metric-subtext" id="apparent-evaluation-text">Apparent offset</p>
+                        <div class="metric-card-bottom">
+                            <h4 id="metric-apparent" class="metric-card-value">--°F</h4>
+                            <p class="metric-card-subtitle" id="apparent-evaluation-text">Calculating temperature offset...</p>
                         </div>
                     </div>
 
                     <!-- Wind Velocity -->
-                    <div class="hollow-card instrument-metric-card">
-                        <div class="metric-top-row">
-                            <span class="metric-label">Wind Velocity</span>
-                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="Windsock" class="metric-icon">
+                    <div class="hollow-card metric-block-card">
+                        <div class="metric-card-top">
+                            <span class="metric-card-title">Wind Speed</span>
+                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="Windsock" class="metric-card-icon">
                         </div>
-                        <div class="metric-bottom-row">
-                            <h4 id="metric-wind" class="metric-value-text">-- mph</h4>
-                            <p class="metric-subtext" id="wind-panel-direction-text">Awaiting velocity</p>
+                        <div class="metric-card-bottom">
+                            <h4 id="metric-wind" class="metric-card-value">-- mph</h4>
+                            <p class="metric-card-subtitle" id="wind-panel-direction-text">Analyzing surface vector...</p>
                         </div>
                     </div>
 
                     <!-- Moisture Humidity -->
-                    <div class="hollow-card instrument-metric-card">
-                        <div class="metric-top-row">
-                            <span class="metric-label">Humidity</span>
-                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/humidity.svg" alt="Humidity" class="metric-icon">
+                    <div class="hollow-card metric-block-card">
+                        <div class="metric-card-top">
+                            <span class="metric-card-title">Humidity</span>
+                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/humidity.svg" alt="Humidity" class="metric-card-icon">
                         </div>
-                        <div class="metric-bottom-row">
-                            <h4 id="metric-humidity" class="metric-value-text">--%</h4>
-                            <p class="metric-subtext" id="humidity-dewpoint-evaluation-text">Dewpoint value</p>
-                        </div>
-                    </div>
-
-                    <!-- Barometric Pressure -->
-                    <div class="hollow-card instrument-metric-card">
-                        <div class="metric-top-row">
-                            <span class="metric-label">Barometer</span>
-                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/barometer.svg" alt="Barometer" class="metric-icon">
-                        </div>
-                        <div class="metric-bottom-row">
-                            <h4 id="metric-pressure" class="metric-value-text">-- inHg</h4>
-                            <p class="metric-subtext" id="barometer-pressure-tendency-text">Baric balance</p>
+                        <div class="metric-card-bottom">
+                            <h4 id="metric-humidity" class="metric-card-value">--%</h4>
+                            <p class="metric-card-subtitle" id="humidity-dewpoint-evaluation-text">Solving moisture values...</p>
                         </div>
                     </div>
 
-                    <!-- Precipitation -->
-                    <div class="hollow-card instrument-metric-card">
-                        <div class="metric-top-row">
-                            <span class="metric-label">Precipitation</span>
-                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/umbrella.svg" alt="Umbrella" class="metric-icon">
+                    <!-- Atmospheric Weight -->
+                    <div class="hollow-card metric-block-card">
+                        <div class="metric-card-top">
+                            <span class="metric-card-title">Barometer</span>
+                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/barometer.svg" alt="Barometer" class="metric-card-icon">
                         </div>
-                        <div class="metric-bottom-row">
-                            <h4 id="metric-precip" class="metric-value-text">--%</h4>
-                            <p class="metric-subtext" id="precipitation-depth-label">Precipitation scale</p>
+                        <div class="metric-card-bottom">
+                            <h4 id="metric-pressure" class="metric-card-value">-- inHg</h4>
+                            <p class="metric-card-subtitle" id="barometer-pressure-tendency-text">Baric velocity trend...</p>
                         </div>
                     </div>
 
-                    <!-- Solar Path Graph -->
-                    <div class="hollow-card instrument-metric-card wide-span-grid">
-                        <div class="metric-top-row">
-                            <span class="metric-label">Astro Horizon Curve</span>
+                    <!-- Precipitation Chance -->
+                    <div class="hollow-card metric-block-card">
+                        <div class="metric-card-top">
+                            <span class="metric-card-title">Precipitation</span>
+                            <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/umbrella.svg" alt="Umbrella" class="metric-card-icon">
                         </div>
-                        <div class="solar-arc-visualizer">
-                            <svg class="solar-curve-svg" viewBox="0 0 200 80">
-                                <path d="M 10 70 Q 100 0 190 70" fill="none" stroke="rgba(255, 255, 255, 0.25)" stroke-width="2" stroke-dasharray="4,4"/>
-                                <circle cx="10" cy="70" r="5.5" fill="#f59e0b" id="svg-active-sun-indicator" class="pulsing-sun-glow"/>
+                        <div class="metric-card-bottom">
+                            <h4 id="metric-precip" class="metric-card-value">--%</h4>
+                            <p class="metric-card-subtitle" id="precipitation-depth-label">Predicting weather output...</p>
+                        </div>
+                    </div>
+
+                    <!-- Astronomical Path -->
+                    <div class="hollow-card metric-block-card astronomical-card-wide">
+                        <div class="metric-card-top">
+                            <span class="metric-card-title">Solar Coordinates & Horizon Trajectory</span>
+                        </div>
+                        <div class="astro-canvas-wrapper">
+                            <svg class="astro-arc-svg-frame" viewBox="0 0 200 80">
+                                <path d="M 10 70 Q 100 0 190 70" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-dasharray="4,4"/>
+                                <circle cx="10" cy="70" r="5" fill="#f59e0b" id="svg-active-sun-indicator"/>
                             </svg>
-                            <div class="solar-legend-footer">
-                                <div class="legend-milestone">
-                                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/sunrise.svg" alt="Sunrise" class="legend-icon">
+                            <div class="astro-time-legends-row">
+                                <div class="astro-milestone">
+                                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/sunrise.svg" alt="Sunrise" class="astro-mini-icon">
                                     <span id="astro-sunrise">--:-- AM</span>
                                 </div>
-                                <div class="legend-milestone">
-                                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/sunset.svg" alt="Sunset" class="legend-icon">
+                                <div class="astro-milestone">
+                                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/sunset.svg" alt="Sunset" class="astro-mini-icon">
                                     <span id="astro-sunset">--:-- PM</span>
                                 </div>
                             </div>
@@ -201,34 +200,34 @@
                 </div>
             </div>
 
-            <!-- VIEWPORT 2: 48-HOUR HORIZONTAL SCALE -->
-            <div id="tab-hourly" class="view-panel">
-                <div class="hollow-card scale-panel-box">
-                    <h3 class="panel-section-title">Hourly Atmospheric Timeline</h3>
-                    <div class="hollow-horizontal-scroller" id="hourly-cards-wrapper">
+            <!-- VIEWPORT 2: 48-HOUR HORIZONTAL FORECAST -->
+            <div id="view-hourly" class="hollow-tab-panel">
+                <div class="hollow-card hourly-panel-box">
+                    <h3 class="panel-section-title">Hourly Forecast Array</h3>
+                    <div class="hourly-overflow-scroll-row" id="hourly-cards-wrapper">
                         <!-- Populated programmatically -->
                     </div>
                 </div>
             </div>
 
-            <!-- VIEWPORT 3: 7-DAY VERTICAL OUTLOOK -->
-            <div id="tab-daily" class="view-panel">
-                <div class="hollow-card scale-panel-box">
-                    <h3 class="panel-section-title">7-Day Outlying Grid</h3>
-                    <div class="hollow-vertical-stack" id="daily-cards-wrapper">
+            <!-- VIEWPORT 3: 7-DAY & NIGHT FORECAST -->
+            <div id="view-daily" class="hollow-tab-panel">
+                <div class="hollow-card daily-panel-box">
+                    <h3 class="panel-section-title">7-Day Outlook</h3>
+                    <div class="daily-vertical-rows-wrapper" id="daily-cards-wrapper">
                         <!-- Populated programmatically -->
                     </div>
                 </div>
             </div>
 
             <!-- VIEWPORT 4: SPACIOUS RADAR VIEWPORT -->
-            <div id="tab-radar" class="view-panel">
-                <div class="hollow-card radar-panel-container">
-                    <div class="radar-header">
-                        <span class="radar-title">Precipitation Velocity Radar</span>
-                        <p class="radar-subtitle">Direct, full-frame live weather tracking vectors</p>
+            <div id="view-radar" class="hollow-tab-panel">
+                <div class="hollow-card radar-panel-box">
+                    <div class="radar-header-block">
+                        <span class="radar-title-text">Precipitation Velocity Radar</span>
+                        <p class="radar-subtitle-text">Real-time localized storm cell tracking arrays</p>
                     </div>
-                    <div class="radar-viewport-spacious">
+                    <div class="radar-iframe-viewport-frame">
                         <iframe id="radar-iframe" src="" allowfullscreen></iframe>
                     </div>
                 </div>
@@ -236,7 +235,7 @@
         </main>
     </div>
 
-    <!-- Script Assets -->
+    <!-- Script Assemblies -->
     <script src="./js/icons.js"></script>
     <script src="./js/location.js"></script>
     <script src="./js/weather.js"></script>
@@ -244,7 +243,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .catch(err => console.warn("Offline engine bypass fallback initialization: ", err));
+                    .catch(err => console.log("Service Worker Registration skipped:", err));
             });
         }
     </script>
