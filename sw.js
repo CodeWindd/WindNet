@@ -1,9 +1,8 @@
 /* ==========================================================================
    WINDYWEATHER OFFLINE SERVICE WORKER
-   Enables offline caching for progressive web app systems
    ========================================================================== */
 
-const CACHE_NAME = 'windyweather-pwa-cache-v3';
+const CACHE_NAME = 'windyweather-pixel-cache-v1';
 const CORE_ASSETS = [
     './',
     './index.html',
