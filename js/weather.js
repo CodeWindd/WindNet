@@ -1,6 +1,6 @@
 /* ==========================================================================
-   WINDYWEATHER DISPATCHER CORE MODULE
-   Fetches NWS grids, real-time station parameters, and astro paths
+   WINDYWEATHER ENGINE SYSTEM - WEATHER INTERFACES
+   Handles NWS data requests and gets Sunrise/Sunset times from Open-Meteo.
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -33,19 +33,27 @@ function initViewportsTabbar() {
 }
 
 /**
- * Precise Day/Night Twilight Evaluator
- * Solves the 6:00 PM sunset daylight calculations bug.
+ * Custom day/night twilight evaluator
+ * Corrects the 6:00 PM sunset daylight calculations bug.
  */
-function isDaytimeAstronomical(latitude, longitude, targetDate) {
-    const decHours = targetDate.getHours() + (targetDate.getMinutes() / 60);
+function isDaytimeAstronomical(latitude, longitude, targetDate, sunriseTimeStr, sunsetTimeStr) {
+    if (sunriseTimeStr && sunsetTimeStr) {
+        try {
+            const sunrise = new Date(sunriseTimeStr);
+            const sunset = new Date(sunsetTimeStr);
+            return targetDate >= sunrise && targetDate <= sunset;
+        } catch (e) {
+            console.warn("Date parse error for astronomical boundary logic:", e);
+        }
+    }
 
+    // Fallback static boundary formula if times are missing
+    const decHours = targetDate.getHours() + (targetDate.getMinutes() / 60);
     const yearStart = new Date(targetDate.getFullYear(), 0, 0);
     const dayIndex = Math.floor((targetDate - yearStart) / (1000 * 60 * 60 * 24));
-
     const timezoneOffset = -targetDate.getTimezoneOffset() / 60;
     
     const gamma = (2 * Math.PI / 365) * (dayIndex - 1 + ((decHours - 12) / 24));
-    
     const eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
     const solarDecl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma) - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
 
@@ -59,12 +67,11 @@ function isDaytimeAstronomical(latitude, longitude, targetDate) {
     const sinElevation = Math.sin(latRad) * Math.sin(solarDecl) + Math.cos(latRad) * Math.cos(solarDecl) * Math.cos(hourAngleRad);
     const elevationDeg = Math.asin(sinElevation) * 180 / Math.PI;
 
-    // Solar horizon refraction boundary threshold (-0.83 degrees)
     return elevationDeg > -0.83;
 }
 
 /**
- * Core Orchestrator
+ * Primary coordinates parser
  */
 window.fetchWeatherData = async function(latitude, longitude) {
     const loader = document.getElementById("weather-loader");
@@ -75,15 +82,31 @@ window.fetchWeatherData = async function(latitude, longitude) {
     alertsBox.innerHTML = "";
     alertsBox.classList.add("hidden");
 
+    // Parse location city name
     document.getElementById("current-city-name").textContent = window.currentLocation.name.split(',')[0];
     document.getElementById("current-coordinates-subtext").textContent = `Lat: ${latitude.toFixed(4)} | Lon: ${longitude.toFixed(4)}`;
 
     try {
+        // Query Open-Meteo strictly for Sunrise and Sunset times
+        const openMeteoAstroUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=sunrise,sunset&timezone=auto`;
+        const openMeteoRes = await fetch(openMeteoAstroUrl);
+        let sunriseISO = null;
+        let sunsetISO = null;
+        
+        if (openMeteoRes.ok) {
+            const openMeteoData = await openMeteoRes.json();
+            if (openMeteoData.daily && openMeteoData.daily.sunrise) {
+                sunriseISO = openMeteoData.daily.sunrise[0];
+                sunsetISO = openMeteoData.daily.sunset[0];
+            }
+        }
+
+        // Fetch NWS points for forecast details
         const pointsUrl = `https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`;
         const pointsRes = await fetch(pointsUrl, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } });
 
         if (!pointsRes.ok) {
-            throw new Error("Coordinates lie outside US borders. Switch to global backup.");
+            throw new Error("Coordinates outside US borders. Invoking global fallback.");
         }
 
         const pointsData = await pointsRes.json();
@@ -98,14 +121,14 @@ window.fetchWeatherData = async function(latitude, longitude) {
         ]);
 
         if (!stationsRes.ok || !forecastRes.ok || !forecastHourlyRes.ok) {
-            throw new Error("Station registers returned error. Switch to global backup.");
+            throw new Error("Station registries returned error. Switching to fallback.");
         }
 
         const stationsData = await stationsRes.json();
         const forecastData = await forecastRes.json();
         const forecastHourlyData = await forecastHourlyRes.json();
 
-        // Get actual real-time telemetry observation logs directly from the nearest active station
+        // Retrieve current observations directly from NWS nearest active station
         let realTimeTelemetry = null;
         if (stationsData.features && stationsData.features.length > 0) {
             const firstStationId = stationsData.features[0].id;
@@ -121,7 +144,7 @@ window.fetchWeatherData = async function(latitude, longitude) {
         }
 
         fetchNWSAlerts(latitude, longitude);
-        renderUSWeather(forecastData.properties.periods, forecastHourlyData.properties.periods, realTimeTelemetry, latitude, longitude);
+        renderUSWeather(forecastData.properties.periods, forecastHourlyData.properties.periods, realTimeTelemetry, latitude, longitude, sunriseISO, sunsetISO);
         updateRadarFrame(latitude, longitude);
 
     } catch (err) {
@@ -160,19 +183,19 @@ async function fetchNWSAlerts(lat, lon) {
                     </svg>
                     <div class="alert-text-body">
                         <h4>${props.event}</h4>
-                        <p>${props.headline || "Active localized emergency statement."}</p>
+                        <p>${props.headline || "Active localized emergency warning."}</p>
                     </div>
                 `;
                 alertsBox.appendChild(div);
             });
         }
     } catch (e) {
-        console.warn("Alert pipeline error:", e);
+        console.warn("Alert pipeline skipped:", e);
     }
 }
 
 /**
- * Parse daytime boundaries using the native NWS icon paths
+ * Parse daytime boundaries using NWS pre-calculated icon path
  * Fixes timezone and solar twilight calculation errors.
  */
 function checkNwsIsDay(period) {
@@ -184,9 +207,9 @@ function checkNwsIsDay(period) {
 /**
  * Process and render US weather datasets
  */
-function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, lon) {
+function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, lon, sunriseISO, sunsetISO) {
     const hourlyNow = hourlyPeriods[0];
-    const isCurrentlyDay = isDaytimeAstronomical(lat, lon, new Date());
+    const isCurrentlyDay = isDaytimeAstronomical(lat, lon, new Date(), sunriseISO, sunsetISO);
 
     let currentTemp = hourlyNow.temperature;
     let descriptionStr = hourlyNow.shortForecast;
@@ -213,16 +236,23 @@ function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, l
         }
     }
 
-    // Bind current HUD details
+    // Dallas conditions cloudy vs thunderstorm patch
+    const precipChance = hourlyNow.probabilityOfPrecipitation?.value || 0;
+    if (precipChance < 20) {
+        descriptionStr = descriptionStr.replace(/(thunderstorm|tstorm|storm|rain|drizzle)/gi, "Cloudy").trim();
+        if (descriptionStr === "" || descriptionStr.toLowerCase().includes("chance")) {
+            descriptionStr = "Partly Cloudy";
+        }
+    }
+
+    // Bind current details
     document.getElementById("current-temp").textContent = `${currentTemp}°`;
     document.getElementById("current-condition-desc").textContent = descriptionStr;
-    
-    const precipChance = hourlyNow.probabilityOfPrecipitation?.value || 0;
     document.getElementById("current-weather-icon").src = window.getWeatherIcon(descriptionStr, isCurrentlyDay, precipChance);
 
     // Bind high/low metrics
-    let todayHigh = "--°";
-    let todayLow = "--°";
+    let todayHigh = "--";
+    let todayLow = "--";
     if (dailyPeriods && dailyPeriods.length > 0) {
         todayHigh = `${dailyPeriods[0].temperature}`;
         todayLow = dailyPeriods[1] ? `${dailyPeriods[1].temperature}` : "--";
@@ -242,15 +272,20 @@ function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, l
     document.getElementById("metric-pressure").textContent = `${baroPressure} inHg`;
     document.getElementById("metric-precip").textContent = `${precipChance}%`;
 
-    // Solar path calculation
-    const sunriseDate = new Date();
-    sunriseDate.setHours(6, 0, 0);
-    const sunsetDate = new Date();
-    sunsetDate.setHours(20, 0, 0);
-
-    document.getElementById("astro-sunrise").textContent = "06:00 AM";
-    document.getElementById("astro-sunset").textContent = "08:00 PM";
-    updateSolarArcSvgNode(sunriseDate, sunsetDate);
+    // Sunrise & Sunset display using Open-Meteo times
+    if (sunriseISO && sunsetISO) {
+        const sunriseObj = new Date(sunriseISO);
+        const sunsetObj = new Date(sunsetISO);
+        const formattedSunrise = sunriseObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const formattedSunset = sunsetObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        document.getElementById("astro-sunrise").textContent = formattedSunrise;
+        document.getElementById("astro-sunset").textContent = formattedSunset;
+        updateSolarArcSvgNode(sunriseObj, sunsetObj);
+    } else {
+        document.getElementById("astro-sunrise").textContent = "06:00 AM";
+        document.getElementById("astro-sunset").textContent = "08:00 PM";
+    }
 
     // Build meteorological analysis summary
     buildMeteorologicalInsight(descriptionStr, currentTemp, windSpeedVal, precipChance);
@@ -424,7 +459,7 @@ function renderGlobalFallbackWeather(data, lat, lon) {
 }
 
 /**
- * Draws the dynamic SVG path elements for the sun trajectory
+ * Draws dynamic SVG path elements for the sun trajectory
  */
 function updateSolarArcSvgNode(sunriseDate, sunsetDate) {
     const sunDot = document.getElementById("svg-solar-node");
