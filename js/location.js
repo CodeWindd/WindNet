@@ -1,46 +1,46 @@
 /* ==========================================================================
-   WINDYWEATHER LOCATION MANAGEMENT MODULE
+   WINDYWEATHER ENVIRONMENT RESOLVER
+   Coordinates autocomplete configurations and local storage caches
    ========================================================================== */
 
-const fallbackLocation = {
+const fallbackLocationCoordinates = {
     name: "Dallas, TX",
     lat: 32.7767,
     lon: -96.7970
 };
 
-window.currentLocation = { ...fallbackLocation };
+window.currentLocation = { ...fallbackLocationCoordinates };
 
 document.addEventListener("DOMContentLoaded", () => {
-    initLocations();
+    initializeLocalCaches();
 });
 
-function initLocations() {
-    // Hydrate standard configuration if empty
-    const saved = getStoredLocations();
+function initializeLocalCaches() {
+    const saved = getCachedLocationsList();
     if (saved.length === 0) {
-        saveNewLocation(fallbackLocation.name, fallbackLocation.lat, fallbackLocation.lon);
+        cacheLocationRecord(fallbackLocationCoordinates.name, fallbackLocationCoordinates.lat, fallbackLocationCoordinates.lon);
     }
 
-    // Restore last session location
-    const storedLast = localStorage.getItem("last_active_location");
-    if (storedLast) {
+    // Restore last session location coordinates
+    const lastCoordinatesRecord = localStorage.getItem("windy_last_active_location");
+    if (lastCoordinatesRecord) {
         try {
-            window.currentLocation = JSON.parse(storedLast);
+            window.currentLocation = JSON.parse(lastCoordinatesRecord);
         } catch (e) {
-            window.currentLocation = { ...fallbackLocation };
+            window.currentLocation = { ...fallbackLocationCoordinates };
         }
     }
 
-    renderSavedShelf();
+    renderSavedShelfPills();
 
     const input = document.getElementById("location-input");
-    const suggestions = document.getElementById("suggestions");
+    const suggestionBox = document.getElementById("suggestions");
 
     // Dynamic autocomplete suggestion dispatcher
     input.addEventListener("input", debounce(async (e) => {
         const query = e.target.value.trim();
         if (query.length < 3) {
-            suggestions.classList.add("hidden");
+            suggestionBox.classList.add("hidden");
             return;
         }
 
@@ -50,85 +50,85 @@ function initLocations() {
 
             const data = await res.json();
             if (data.results && data.results.length > 0) {
-                suggestions.innerHTML = "";
+                suggestionBox.innerHTML = "";
                 data.results.forEach(item => {
                     const country = item.country || "";
                     const state = item.admin1 || "";
                     const label = `${item.name}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
 
-                    const el = document.createElement("div");
-                    el.className = "suggestion-item";
-                    el.textContent = label;
-                    el.addEventListener("click", () => {
+                    const row = document.createElement("div");
+                    row.className = "suggestion-item";
+                    row.textContent = label;
+                    row.addEventListener("click", () => {
                         window.currentLocation = {
                             name: label,
                             lat: item.latitude,
                             lon: item.longitude
                         };
-                        localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
-                        suggestions.classList.add("hidden");
+                        localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
+                        suggestionBox.classList.add("hidden");
                         input.value = "";
-                        triggerWeatherFetch();
+                        triggerAtmosphericDiagnosticsUpdate();
                     });
-                    suggestions.appendChild(el);
+                    suggestionBox.appendChild(row);
                 });
-                suggestions.classList.remove("hidden");
+                suggestionBox.classList.remove("hidden");
             } else {
-                suggestions.classList.add("hidden");
+                suggestionBox.classList.add("hidden");
             }
         } catch (err) {
-            console.warn("Geocoder query bypassed:", err);
+            console.warn("Geocoder pipeline bypassed:", err);
         }
     }, 350));
 
-    // Handle outside clicks to close autocomplete dropdown
+    // Handle outside clicks to close autocomplete dropdown list
     document.addEventListener("click", (e) => {
-        if (!input.contains(e.target) && !suggestions.contains(e.target)) {
-            suggestions.classList.add("hidden");
+        if (!input.contains(e.target) && !suggestionBox.contains(e.target)) {
+            suggestionBox.classList.add("hidden");
         }
     });
 
-    // Handle search triggers
+    // Handle manual text inputs
     input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
             const val = input.value.trim();
             if (val) {
-                fetchLocationByString(val);
-                suggestions.classList.add("hidden");
+                fetchLocationRecordFromString(val);
+                suggestionBox.classList.add("hidden");
             }
         }
     });
 
-    // Handle geolocation queries
+    // Handle Geolocation coordinates API
     document.getElementById("gps-btn").addEventListener("click", () => {
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
                 window.currentLocation = {
-                    name: `Current Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
+                    name: `Location Coordinates (${lat.toFixed(2)}, ${lon.toFixed(2)})`,
                     lat: lat,
                     lon: lon
                 };
-                localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
-                triggerWeatherFetch();
+                localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
+                triggerAtmosphericDiagnosticsUpdate();
             }, () => {
-                alert("Location access denied. Using fallback coordinates.");
+                alert("Location permission denied. Utilizing default coordinates.");
             });
         }
     });
 
-    // Save location trigger
+    // Handle manual quick save triggers
     document.getElementById("save-current-btn").addEventListener("click", () => {
-        saveNewLocation(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
-        renderSavedShelf();
+        cacheLocationRecord(window.currentLocation.name, window.currentLocation.lat, window.currentLocation.lon);
+        renderSavedShelfPills();
     });
 }
 
 /**
- * Fetch Coordinates from Text
+ * Convert manual query text into coordinates
  */
-async function fetchLocationByString(query) {
+async function fetchLocationRecordFromString(query) {
     try {
         const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
         const data = await res.json();
@@ -142,45 +142,45 @@ async function fetchLocationByString(query) {
                 lat: top.latitude,
                 lon: top.longitude
             };
-            localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
+            localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
             document.getElementById("location-input").value = "";
-            triggerWeatherFetch();
+            triggerAtmosphericDiagnosticsUpdate();
         } else {
-            alert("No matching cities found.");
+            alert("Location string returned no coordinates.");
         }
     } catch (e) {
-        console.error("Geocoding fetch failed:", e);
+        console.error("Geocoding fetch operation skipped:", e);
     }
 }
 
-function getStoredLocations() {
-    const raw = localStorage.getItem("windyweather_saved");
+function getCachedLocationsList() {
+    const raw = localStorage.getItem("windy_saved_locations_cache");
     return raw ? JSON.parse(raw) : [];
 }
 
-function saveNewLocation(name, lat, lon) {
-    const list = getStoredLocations();
-    if (!list.some(item => item.name === name)) {
-        list.push({ name, lat, lon });
-        localStorage.setItem("windyweather_saved", JSON.stringify(list));
+function cacheLocationRecord(name, lat, lon) {
+    const currentList = getCachedLocationsList();
+    if (!currentList.some(item => item.name === name)) {
+        currentList.push({ name, lat, lon });
+        localStorage.setItem("windy_saved_locations_cache", JSON.stringify(currentList));
     }
 }
 
-function removeLocation(name) {
-    let list = getStoredLocations();
-    list = list.filter(item => item.name !== name);
-    localStorage.setItem("windyweather_saved", JSON.stringify(list));
-    renderSavedShelf();
+function deleteCachedLocation(name) {
+    let currentList = getCachedLocationsList();
+    currentList = currentList.filter(item => item.name !== name);
+    localStorage.setItem("windy_saved_locations_cache", JSON.stringify(currentList));
+    renderSavedShelfPills();
 }
 
 /**
  * Hydrates saved locations into UI pills
  */
-function renderSavedShelf() {
+function renderSavedShelfPills() {
     const container = document.getElementById("saved-list");
     container.innerHTML = "";
 
-    const list = getStoredLocations();
+    const list = getCachedLocationsList();
     list.forEach(item => {
         const pill = document.createElement("div");
         pill.className = "location-pill";
@@ -192,12 +192,12 @@ function renderSavedShelf() {
         pill.addEventListener("click", (e) => {
             if (e.target.classList.contains("delete-pill-cross")) {
                 e.stopPropagation();
-                removeLocation(item.name);
+                deleteCachedLocation(item.name);
                 return;
             }
             window.currentLocation = { name: item.name, lat: item.lat, lon: item.lon };
-            localStorage.setItem("last_active_location", JSON.stringify(window.currentLocation));
-            triggerWeatherFetch();
+            localStorage.setItem("windy_last_active_location", JSON.stringify(window.currentLocation));
+            triggerAtmosphericDiagnosticsUpdate();
         });
 
         container.appendChild(pill);
@@ -212,7 +212,7 @@ function debounce(func, delay) {
     };
 }
 
-function triggerWeatherFetch() {
+function triggerAtmosphericDiagnosticsUpdate() {
     if (window.fetchWeatherData) {
         window.fetchWeatherData(window.currentLocation.lat, window.currentLocation.lon);
     }
