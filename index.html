@@ -3,270 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WindyWeather | Pixel Experience</title>
+    <title>WindyWeather | Pixel Weather Experience</title>
     
+    <!-- Base Styling -->
     <link rel="stylesheet" href="./css/style.css">
+    
+    <!-- PWA Configurations -->
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#121316">
+    <meta name="theme-color" content="#0b0e14">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg">
     <link rel="icon" type="image/svg+xml" href="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg">
 
+    <!-- Preconnect Optimization -->
     <link rel="preconnect" href="https://cdn.meteocons.com">
     <link rel="preconnect" href="https://api.weather.gov">
     <link rel="preconnect" href="https://api.open-meteo.com">
 </head>
 <body>
 
-    <div class="pixel-viewport-container">
-        
-        <!-- Premium Pixel-Style Header -->
-        <header class="pixel-app-header">
-            <div class="header-top-row">
-                <div class="brand-group">
-                    <img src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/windsock.svg" alt="Logo" class="brand-logo-icon">
-                    <span class="brand-title">WindyWeather</span>
-                </div>
-                
-                <!-- Hollow Autocomplete Bar with Inline SVGs -->
-                <div class="pixel-search-pill-box">
-                    <span class="search-icon-gfx">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                    </span>
-                    <input type="text" id="location-input" placeholder="Search cities..." autocomplete="off">
-                    <button id="gps-btn" class="gps-trigger-btn" title="Locate Coordinates">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"></path>
-                            <circle cx="12" cy="9" r="2"></circle>
-                        </svg>
-                    </button>
-                    <div id="suggestions" class="suggestions-dropdown hidden"></div>
-                </div>
-            </div>
+    <!-- Fullscreen Backdrop Image Canvas -->
+    <div class="pixel-background-canvas"></div>
 
-            <!-- Saved Environment shelf -->
-            <div class="pixel-card saved-cities-shelf">
-                <div class="shelf-header">
-                    <span class="shelf-title">Saved Locations</span>
-                    <button id="save-current-btn" class="save-location-chip">+ Save Current</button>
-                </div>
-                <div id="saved-list" class="shelf-row-scroll">
-                    <!-- Dynamic chips -->
-                </div>
-            </div>
+    <div class="pixel-app-container">
+        
+        <!-- Google Pixel Styled Header Bar -->
+        <header class="pixel-header">
+            <button id="search-trigger-btn" class="header-action-btn" aria-label="Open Search">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <h1 id="current-city-name" class="header-city-title">Dallas</h1>
+            <button id="gps-btn" class="header-action-btn" aria-label="Current Location">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+            </button>
         </header>
 
-        <!-- Current City Label HUD (Matches Warszawa Centered Vibe) -->
-        <section class="pixel-hero-identity">
-            <h1 id="current-city-name" class="pixel-city-title">Dallas</h1>
-            <p id="current-coordinates-subtext" class="pixel-city-coords">Latitude: 32.7767 | Longitude: -96.7970</p>
-        </section>
+        <!-- Slide-out Search Panel (Full Screen Overlay) -->
+        <div id="search-overlay" class="search-overlay hidden">
+            <div class="search-overlay-header">
+                <button id="close-search-btn" class="header-action-btn">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <div class="search-input-box">
+                    <input type="text" id="location-input" placeholder="Search cities..." autocomplete="off">
+                </div>
+            </div>
+            <div id="suggestions" class="suggestions-list hidden"></div>
 
-        <!-- Active NWS warnings hub -->
-        <section id="nws-alerts-container" class="emergency-alerts-hud hidden">
-            <!-- Alert divs appended here -->
-        </section>
-
-        <!-- 4-Tab Navigation Bar (Rounded 25px) -->
-        <nav class="pixel-tabbar-chips-container">
-            <button class="tab-chip active" data-tab="viewport-current">Current</button>
-            <button class="tab-chip" data-tab="viewport-hourly">Hourly</button>
-            <button class="tab-chip" data-tab="viewport-daily">7-Day</button>
-            <button class="tab-chip" data-tab="viewport-radar">Radar Map</button>
-        </nav>
-
-        <!-- Loading HUD -->
-        <div id="weather-loader" class="pixel-sync-loader hidden">
-            <div class="loader-circle"></div>
-            <p>Syncing atmospheric registers...</p>
+            <!-- Saved Cities Section Inside Search -->
+            <div class="saved-cities-container">
+                <div class="saved-cities-header">
+                    <span class="section-title">Saved Locations</span>
+                    <button id="save-current-btn" class="save-chip-btn">+ Save Current</button>
+                </div>
+                <div id="saved-list" class="saved-chips-grid">
+                    <!-- Dynamic location pills -->
+                </div>
+            </div>
         </div>
 
-        <!-- Master Switchable Viewports -->
-        <main class="pixel-viewports-viewport">
+        <!-- Hero Atmospheric Display -->
+        <section class="pixel-hero-display">
+            <p id="current-condition-desc" class="hero-condition-text">Clear</p>
+            <div class="hero-temp-group">
+                <h2 id="current-temp" class="hero-giant-temp">--</h2>
+                <img id="current-weather-icon" src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/clear-day.svg" alt="Weather State" class="hero-weather-icon">
+            </div>
+            <div class="hero-subtext-group">
+                <p id="metric-apparent" class="hero-feels-like">Feels like --°</p>
+                <p id="hero-temp-range" class="hero-extremes">High --° • Low --°</p>
+            </div>
+            <p id="current-coordinates-subtext" class="hero-coordinates">Lat: 32.7767 | Lon: -96.7970</p>
+        </section>
+
+        <!-- Active NWS Emergency Warnings banner -->
+        <section id="nws-alerts-container" class="active-alerts-container hidden">
+            <!-- Dynamic warning cards -->
+        </section>
+
+        <!-- Pill-Styled 4-Tab Navigation Bar (Rounded 25px) -->
+        <nav class="pixel-pill-navigation">
+            <button class="pixel-tab-pill active" data-tab="tab-current">Current</button>
+            <button class="pixel-tab-pill" data-tab="tab-hourly">Hourly</button>
+            <button class="pixel-tab-pill" data-tab="tab-daily">10-Day</button>
+            <button class="pixel-tab-pill" data-tab="tab-radar">Radar Map</button>
+        </nav>
+
+        <!-- Loading HUD state spinner -->
+        <div id="weather-loader" class="pixel-hud-loader hidden">
+            <div class="hud-spinner"></div>
+            <p class="hud-loader-text">Loading meteorological charts...</p>
+        </div>
+
+        <!-- Switchable viewports context -->
+        <main class="pixel-viewports-box">
             
-            <!-- VIEWPORT 1: CURRENT CONDITIONS -->
-            <div id="viewport-current" class="view-panel active-panel">
+            <!-- TAB 1: CURRENT GRID MODULES -->
+            <div id="tab-current" class="pixel-viewport-panel active-panel">
                 
-                <!-- Main Centered Warszawa Temperature Hero -->
-                <div class="centered-weather-identity-block">
-                    <p id="current-condition-desc" class="centered-condition">Clear</p>
-                    <div class="centered-temp-row">
-                        <span id="current-temp" class="centered-giant-temp">19</span>
-                        <img id="current-weather-icon" src="https://cdn.meteocons.com/3.0.0-next.10/svg/fill/clear-day.svg" alt="Weather State" class="centered-state-gfx">
-                    </div>
-                    <p id="metric-apparent" class="centered-feels-like">Feels like 19°</p>
-                    <p id="hero-extremes" class="centered-extremes">High 18° • Low 14°</p>
-                </div>
-
-                <!-- AI Meteorological Insights -->
+                <!-- Meteorological AI Summary block -->
                 <div class="pixel-card insight-card">
-                    <div class="insight-header">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
-                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    <div class="card-section-header">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        <h3>Analytical Environment Insight</h3>
+                        <h3 class="card-section-title">Atmospheric Diagnostics Summary</h3>
                     </div>
-                    <p id="weather-insight-text">Formulating dynamic climate diagnostic summary...</p>
+                    <p id="weather-insight-text" class="insight-text-narrative">Compiling readings...</p>
                 </div>
 
-                <!-- Google Weather-styled Metrics grid -->
-                <div class="pixel-metrics-grid">
+                <!-- Equal-Height Instrument Cards Grid -->
+                <div class="pixel-dashboard-grid">
                     
-                    <!-- Wind (Matches bottom-left visual of Warszawa image) -->
-                    <div class="pixel-card metric-item-card">
-                        <div class="metric-top-header">
-                            <span class="metric-title-lbl">Wind</span>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <!-- Wind Module -->
+                    <div class="pixel-card instrument-card">
+                        <div class="instrument-header">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
                             </svg>
+                            <span class="instrument-title">Wind</span>
                         </div>
-                        <div class="metric-bottom-info">
-                            <h4 id="metric-wind">12 mph</h4>
-                            <p id="wind-direction-text" class="metric-sub-lbl">Direction: North East</p>
+                        <div class="instrument-body">
+                            <h4 id="metric-wind" class="instrument-primary-value">-- mph</h4>
+                            <p id="wind-direction-text" class="instrument-secondary-desc">Awaiting direction</p>
                         </div>
                     </div>
 
-                    <!-- Sunrise & Sunset (Matches bottom-right visual) -->
-                    <div class="pixel-card metric-item-card">
-                        <div class="metric-top-header">
-                            <span class="metric-title-lbl">Sunrise & Sunset</span>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+                    <!-- Humidity Module -->
+                    <div class="pixel-card instrument-card">
+                        <div class="instrument-header">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22a7 7 0 0 0 7-7c0-4.3-7-11-7-11S5 10.7 5 15a7 7 0 0 0 7 7z"></path>
                             </svg>
+                            <span class="instrument-title">Humidity</span>
                         </div>
-                        <div class="metric-bottom-info">
-                            <div class="astro-row">
-                                <span id="astro-sunrise">06:12 AM</span>
-                                <span id="astro-sunset">08:24 PM</span>
-                            </div>
-                            <p class="metric-sub-lbl">Dynamic solar arc trajectory</p>
+                        <div class="instrument-body">
+                            <h4 id="metric-humidity" class="instrument-primary-value">--%</h4>
+                            <p id="humidity-dewpoint" class="instrument-secondary-desc">Dewpoint: --°</p>
                         </div>
                     </div>
 
-                    <!-- Humidity -->
-                    <div class="pixel-card metric-item-card">
-                        <div class="metric-top-header">
-                            <span class="metric-title-lbl">Humidity</span>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="metric-bottom-info">
-                            <h4 id="metric-humidity">64%</h4>
-                            <p id="humidity-dewpoint" class="metric-sub-lbl">Dewpoint calculation active</p>
-                        </div>
-                    </div>
-
-                    <!-- Barometer -->
-                    <div class="pixel-card metric-item-card">
-                        <div class="metric-top-header">
-                            <span class="metric-title-lbl">Barometer</span>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <!-- Barometer Module -->
+                    <div class="pixel-card instrument-card">
+                        <div class="instrument-header">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <polyline points="12 6 12 12 16 14"></polyline>
                             </svg>
+                            <span class="instrument-title">Barometer</span>
                         </div>
-                        <div class="metric-bottom-info">
-                            <h4 id="metric-pressure">29.92 inHg</h4>
-                            <p id="pressure-tendency" class="metric-sub-lbl">Steady baric weight</p>
+                        <div class="instrument-body">
+                            <h4 id="metric-pressure" class="instrument-primary-value">-- inHg</h4>
+                            <p id="pressure-tendency" class="instrument-secondary-desc">Stable Baric Weight</p>
                         </div>
                     </div>
 
-                    <!-- Precipitation -->
-                    <div class="pixel-card metric-item-card">
-                        <div class="metric-top-header">
-                            <span class="metric-title-lbl">Precipitation</span>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2v3M5 22h14M12 17v5M5 10c0 3.87 3.13 7 7 7s7-3.13 7-7H5z"></path>
+                    <!-- Precipitation Module -->
+                    <div class="pixel-card instrument-card">
+                        <div class="instrument-header">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                             </svg>
+                            <span class="instrument-title">Precipitation</span>
                         </div>
-                        <div class="metric-bottom-info">
-                            <h4 id="metric-precip">10%</h4>
-                            <p id="precip-depth" class="metric-sub-lbl">Shower probability scale</p>
+                        <div class="instrument-body">
+                            <h4 id="metric-precip" class="instrument-primary-value">--%</h4>
+                            <p id="precip-depth" class="instrument-secondary-desc">Probability margin</p>
                         </div>
                     </div>
 
-                    <!-- Astronomical Solar Path -->
-                    <div class="pixel-card metric-item-card astro-wide-block">
-                        <div class="metric-top-header">
-                            <span class="metric-title-lbl">Solar Arc Trajectory</span>
+                    <!-- Sunrise & Sunset arc timeline -->
+                    <div class="pixel-card instrument-card grid-col-span-2">
+                        <div class="instrument-header">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M6.34 17.66l-2.83 2.83M19.07 4.93l-2.83 2.83"></path>
+                            </svg>
+                            <span class="instrument-title">Solar Position & Arc</span>
                         </div>
-                        <div class="solar-arc-viewport">
+                        <div class="solar-arc-widget">
                             <svg class="solar-arc-svg" viewBox="0 0 200 80">
-                                <path d="M 10 70 Q 100 0 190 70" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2.5" stroke-dasharray="4,4"/>
-                                <circle cx="10" cy="70" r="5.5" fill="#f59e0b" id="svg-active-sun" class="sun-glow"/>
+                                <path d="M 10 70 Q 100 0 190 70" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-dasharray="4,4"/>
+                                <circle cx="10" cy="70" r="5" fill="#f59e0b" id="svg-solar-node"/>
                             </svg>
+                            <div class="solar-time-legend">
+                                <span id="astro-sunrise">--:-- AM</span>
+                                <span id="astro-sunset">--:-- PM</span>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- VIEWPORT 2: HOURLY FORECAST (Matches Warszawa Card exactly) -->
-            <div id="viewport-hourly" class="view-panel">
-                <div class="pixel-card forecast-pixel-card">
-                    <div class="card-header-bar">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- TAB 2: HOURLY FORECAST HORIZONTAL COLUMN TILES -->
+            <div id="tab-hourly" class="pixel-viewport-panel">
+                <div class="pixel-card forecast-scroll-card">
+                    <div class="card-section-header">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        <span>Hourly forecast</span>
+                        <h3 class="card-section-title">Hourly Forecast</h3>
                     </div>
-                    <div class="hourly-timeline-row-scroll" id="hourly-cards-wrapper">
-                        <!-- Populated programmatically -->
+                    <div class="horizontal-scroller" id="hourly-cards-wrapper">
+                        <!-- Loaded dynamically via script -->
                     </div>
                 </div>
             </div>
 
-            <!-- VIEWPORT 3: 7-DAY OUTLOOK (Matches Warszawa 10-day Card shape) -->
-            <div id="viewport-daily" class="view-panel">
-                <div class="pixel-card forecast-pixel-card">
-                    <div class="card-header-bar">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- TAB 3: 10-DAY FORECAST HORIZONTAL COLUMN TILES -->
+            <div id="tab-daily" class="pixel-viewport-panel">
+                <div class="pixel-card forecast-scroll-card">
+                    <div class="card-section-header">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                             <line x1="16" y1="2" x2="16" y2="6"></line>
                             <line x1="8" y1="2" x2="8" y2="6"></line>
                             <line x1="3" y1="10" x2="21" y2="10"></line>
                         </svg>
-                        <span>10-day forecast</span>
+                        <h3 class="card-section-title">10-Day Forecast</h3>
                     </div>
-                    <div class="daily-columns-wrapper-scroll" id="daily-cards-wrapper">
-                        <!-- Populated programmatically -->
+                    <div class="horizontal-scroller" id="daily-cards-wrapper">
+                        <!-- Loaded dynamically via script -->
                     </div>
                 </div>
             </div>
 
-            <!-- VIEWPORT 4: SPACIOUS PRECIPITATION RADAR -->
-            <div id="viewport-radar" class="view-panel">
-                <div class="pixel-card radar-panel-card">
-                    <div class="radar-header-lbls">
-                        <span class="radar-title">Precipitation Radar</span>
-                        <p class="radar-subtitle">Real-time velocity coordinates track</p>
+            <!-- TAB 4: PRECISION RADAR DISPLAY -->
+            <div id="tab-radar" class="pixel-viewport-panel">
+                <div class="pixel-card radar-viewport-card">
+                    <div class="card-section-header">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            <path d="M2 12h20"></path>
+                        </svg>
+                        <h3 class="card-section-title">Interactive Radar Map</h3>
                     </div>
-                    <div class="radar-spacious-frame-wrapper">
+                    <div class="spacious-radar-frame-box">
                         <iframe id="radar-iframe" src="" allowfullscreen></iframe>
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
 
-    <!-- Script configurations -->
+    <!-- Active Script dependencies -->
     <script src="./js/icons.js"></script>
     <script src="./js/location.js"></script>
     <script src="./js/weather.js"></script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .catch(err => console.log("Offline worker bypassed:", err));
-            });
-        }
-    </script>
 </body>
 </html>
