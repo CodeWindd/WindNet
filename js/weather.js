@@ -1,156 +1,154 @@
 /* ==========================================================================
-   WINDYWEATHER MASTER ENGINE MODULE
+   WINDYWEATHER SYSTEM DISPATCHER ENGINE
+   Master coordinates parser, fallback triggers, and particle generators
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
-    initAppTabs();
+    initAppNavigationTabHandlers();
     
-    // Initial fetch for the default location
+    // Initial dispatcher sequence
     window.fetchWeatherData(window.currentLocation.lat, window.currentLocation.lon);
 });
 
 /**
- * Tab Navigation Handler
+ * Handle Material Nav button shifts
  */
-function initAppTabs() {
-    const tabs = document.querySelectorAll(".pixel-tab-chip");
-    const panels = document.querySelectorAll(".viewport-panel");
+function initAppNavigationTabHandlers() {
+    const tabChips = document.querySelectorAll(".tab-pill-navigation-btn");
+    const viewportPanels = document.querySelectorAll(".workspace-viewport-panel");
 
-    tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-            tabs.forEach(t => t.classList.remove("active"));
-            panels.forEach(p => p.classList.remove("active-panel"));
+    tabChips.forEach(chip => {
+        chip.addEventListener("click", () => {
+            tabChips.forEach(t => t.classList.remove("active"));
+            viewportPanels.forEach(p => p.classList.remove("active-panel"));
 
-            tab.classList.add("active");
-            const targetId = tab.getAttribute("data-tab");
-            document.getElementById(targetId).classList.add("active-panel");
+            chip.classList.add("active");
+            const targetID = chip.getAttribute("data-tab");
+            const targetPanel = document.getElementById(targetID);
+            if (targetPanel) {
+                targetPanel.classList.add("active-panel");
+            }
         });
     });
 }
 
 /**
- * Astronomical Solar Calculator Engine
- * Solves the 6:00 PM sunset bug by determining real solar altitude.
+ * Custom Day/Night twilight evaluator
+ * Solves twilight rendering mismatch errors.
  */
-function isDaytimeAstronomical(lat, lon, targetDate) {
-    const hours = targetDate.getHours();
-    const minutes = targetDate.getMinutes();
-    const decimalHour = hours + (minutes / 60);
+function evaluateSolarDayNight(latitude, longitude, targetDate) {
+    const decHours = targetDate.getHours() + (targetDate.getMinutes() / 60);
 
-    // Day of the year
-    const start = new Date(targetDate.getFullYear(), 0, 0);
-    const diff = targetDate - start;
-    const oneDay = 1000 * 60 * 60 * 24;
-    const dayOfYear = Math.floor(diff / oneDay);
+    // Get current calendar day index
+    const yearStart = new Date(targetDate.getFullYear(), 0, 0);
+    const dayIndex = Math.floor((targetDate - yearStart) / (1000 * 60 * 60 * 24));
 
-    // Local standard time meridian
-    const timezoneOffsetHours = -targetDate.getTimezoneOffset() / 60;
+    // Standard UTC offset representation
+    const tzOffsetHours = -targetDate.getTimezoneOffset() / 60;
     
-    // Fractional Year
-    const gamma = (2 * Math.PI / 365) * (dayOfYear - 1 + ((decimalHour - 12) / 24));
+    // Fractional Year calculations
+    const fractYear = (2 * Math.PI / 365) * (dayIndex - 1 + ((decHours - 12) / 24));
     
-    // Equation of Time (minutes)
-    const eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma));
+    // Equation of Time offset
+    const eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(fractYear) - 0.032077 * Math.sin(fractYear) - 0.014615 * Math.cos(2 * fractYear) - 0.040849 * Math.sin(2 * fractYear));
     
-    // Solar Declination Angle (radians)
-    const decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma) - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma);
+    // Solar declination coordinates (radians)
+    const solarDecl = 0.006918 - 0.399912 * Math.cos(fractYear) + 0.070257 * Math.sin(fractYear) - 0.006758 * Math.cos(2 * fractYear) + 0.000907 * Math.sin(2 * fractYear) - 0.002697 * Math.cos(3 * fractYear) + 0.00148 * Math.sin(3 * fractYear);
 
-    // Time offset (minutes)
-    const timeOffset = eqtime + 4 * lon - 60 * timezoneOffsetHours;
+    // True Solar Time calculations
+    const timeOffset = eqTime + 4 * longitude - 60 * tzOffsetHours;
+    const trueSolarTime = decHours * 60 + timeOffset;
     
-    // True Solar Time
-    const tst = decimalHour * 60 + timeOffset;
-    
-    // Hour Angle (degrees)
-    const ha = (tst / 4) - 180;
-    const haRad = ha * Math.PI / 180;
-    const latRad = lat * Math.PI / 180;
+    // Hour Angle conversions
+    const hourAngle = (trueSolarTime / 4) - 180;
+    const hourAngleRad = hourAngle * Math.PI / 180;
+    const latRad = latitude * Math.PI / 180;
 
     // Solar Elevation Angle
-    const sinEl = Math.sin(latRad) * Math.sin(decl) + Math.cos(latRad) * Math.cos(decl) * Math.cos(haRad);
-    const elevationRad = Math.asin(sinEl);
-    const elevationDeg = elevationRad * 180 / Math.PI;
+    const sinElevation = Math.sin(latRad) * Math.sin(solarDecl) + Math.cos(latRad) * Math.cos(solarDecl) * Math.cos(hourAngleRad);
+    const elevationDeg = Math.asin(sinElevation) * 180 / Math.PI;
 
-    // Sun is above the horizon if solar altitude is > -0.83 degrees
+    // Horizon threshold represents standard refractive index values (-0.83 degrees)
     return elevationDeg > -0.83;
 }
 
 /**
- * Primary Weather Dispatcher
+ * Core Orchestrator
  */
-window.fetchWeatherData = async function(lat, lon) {
-    const loader = document.getElementById("weather-loader");
-    loader.classList.remove("hidden");
+window.fetchWeatherData = async function(latitude, longitude) {
+    const loadingHUD = document.getElementById("weather-loader");
+    loadingHUD.classList.remove("hidden");
 
-    // Clear alerts first
-    document.getElementById("nws-alerts-container").innerHTML = "";
-    document.getElementById("nws-alerts-container").classList.add("hidden");
+    // Clear alert stacks
+    const alertBox = document.getElementById("nws-alerts-container");
+    alertBox.innerHTML = "";
+    alertBox.classList.add("hidden");
 
     document.getElementById("current-city-name").textContent = window.currentLocation.name;
-    document.getElementById("current-coordinates-subtext").textContent = `Latitude: ${lat.toFixed(4)} | Longitude: ${lon.toFixed(4)}`;
+    document.getElementById("current-coordinates-subtext").textContent = `Latitude: ${latitude.toFixed(4)} | Longitude: ${longitude.toFixed(4)}`;
 
     try {
-        // Query NWS points for US metadata
-        const pointsUrl = `https://api.weather.gov/points/${lat.toFixed(4)},${lon.toFixed(4)}`;
-        const pointsRes = await fetch(pointsUrl, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } });
+        // Fetch NWS grid endpoints
+        const pointsEndpoint = `https://api.weather.gov/points/${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+        const pointsRes = await fetch(pointsEndpoint, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } });
 
         if (!pointsRes.ok) {
-            throw new Error("Location outside US borders. Switching to Open-Meteo.");
+            throw new Error("Target region lies outside NWS service limits. Initializing global fallback.");
         }
 
         const pointsData = await pointsRes.json();
-        const stationsUrl = pointsData.properties.observationStations;
-        const forecastUrl = pointsData.properties.forecast;
-        const forecastHourlyUrl = pointsData.properties.forecastHourly;
+        const stationsURL = pointsData.properties.observationStations;
+        const forecastURL = pointsData.properties.forecast;
+        const forecastHourlyURL = pointsData.properties.forecastHourly;
 
-        // Fetch station list, forecasts, and active alerts
+        // Fetch station registers, hourly datasets, and primary daily forecasts
         const [stationsRes, forecastRes, forecastHourlyRes] = await Promise.all([
-            fetch(stationsUrl, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } }),
-            fetch(forecastUrl),
-            fetch(forecastHourlyUrl)
+            fetch(stationsURL, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } }),
+            fetch(forecastURL),
+            fetch(forecastHourlyURL)
         ]);
 
         if (!stationsRes.ok || !forecastRes.ok || !forecastHourlyRes.ok) {
-            throw new Error("NWS forecast data unavailable. Switching to fallback.");
+            throw new Error("Station registers returned invalid states. Launching global fallback.");
         }
 
         const stationsData = await stationsRes.json();
         const forecastData = await forecastRes.json();
         const forecastHourlyData = await forecastHourlyRes.json();
 
-        // Retrieve real-time metrics from the closest station
-        let currentConditions = null;
+        // Retrieve real-time parameters from the closest observation station
+        let realTimeStationObservation = null;
         if (stationsData.features && stationsData.features.length > 0) {
-            const primaryStationUrl = stationsData.features[0].id;
+            const nearestStationURL = stationsData.features[0].id;
             try {
-                const obsRes = await fetch(`${primaryStationUrl}/observations/latest`, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } });
+                const obsRes = await fetch(`${nearestStationURL}/observations/latest`, { headers: { 'Accept': 'application/geo+json', 'User-Agent': 'WindyWeatherClient' } });
                 if (obsRes.ok) {
                     const obsData = await obsRes.json();
-                    currentConditions = obsData.properties;
+                    realTimeStationObservation = obsData.properties;
                 }
             } catch (obsErr) {
-                console.warn("Failed to retrieve current station observations. Using hourly forecasts instead.", obsErr);
+                console.warn("Failed to retrieve real-time station observations. Falling back to hourly forecasts.", obsErr);
             }
         }
 
-        fetchNWSAlerts(lat, lon);
-        renderUSWeather(forecastData.properties.periods, forecastHourlyData.properties.periods, currentConditions, lat, lon);
-        updateRadarFrame(lat, lon);
+        fetchNWSAlerts(latitude, longitude);
+        renderUSWeather(forecastData.properties.periods, forecastHourlyData.properties.periods, realTimeStationObservation, latitude, longitude);
+        updateRadarFrame(latitude, longitude);
 
     } catch (err) {
         console.warn(err.message);
-        fetchGlobalFallback(lat, lon);
+        fetchGlobalFallback(latitude, longitude);
     } finally {
-        loader.classList.add("hidden");
+        loadingHUD.classList.add("hidden");
     }
 };
 
 /**
- * Fetch and display active NWS alerts
+ * Query active emergency alerts from the NWS
  */
 async function fetchNWSAlerts(lat, lon) {
-    const container = document.getElementById("nws-alerts-container");
-    container.innerHTML = "";
+    const alertBox = document.getElementById("nws-alerts-container");
+    alertBox.innerHTML = "";
 
     try {
         const res = await fetch(`https://api.weather.gov/alerts/active?point=${lat.toFixed(4)},${lon.toFixed(4)}`, {
@@ -160,218 +158,230 @@ async function fetchNWSAlerts(lat, lon) {
 
         const data = await res.json();
         if (data.features && data.features.length > 0) {
-            container.classList.remove("hidden");
+            alertBox.classList.remove("hidden");
             data.features.forEach(feat => {
                 const props = feat.properties;
-                const el = document.createElement("div");
-                el.className = "alert-item-box";
-                el.innerHTML = `
+                const node = document.createElement("div");
+                node.className = "alert-item-box";
+                node.innerHTML = `
                     <span class="alert-warning-symbol">⚠️</span>
                     <div class="alert-body">
                         <h4>${props.event}</h4>
-                        <p>${props.headline || "Active Warning Issued by NWS"}</p>
+                        <p>${props.headline || "Active localized emergency statement issued by weather services."}</p>
                     </div>
                 `;
-                container.appendChild(el);
+                alertBox.appendChild(node);
             });
         }
     } catch (e) {
-        console.warn("NWS alerts skipped:", e);
+        console.warn("Alert service connection timed out:", e);
     }
 }
 
 /**
- * Process and Render US Datasets
+ * Extract daytime booleans using the NWS pre-calculated icon path
+ * This is highly accurate and bypasses timezone offset conversion errors.
  */
-function renderUSWeather(dailyPeriods, hourlyPeriods, currentConditions, lat, lon) {
+function parseNwsIsDay(period) {
+    if (period.isDaytime !== undefined) return period.isDaytime;
+    if (period.icon && period.icon.includes("/night/")) return false;
+    return true;
+}
+
+/**
+ * Process and render US-based data layers
+ */
+function renderUSWeather(dailyPeriods, hourlyPeriods, currentObservation, lat, lon) {
     const hourlyNow = hourlyPeriods[0];
-    const isDay = isDaytimeAstronomical(lat, lon, new Date());
+    const isCurrentlyDay = evaluateSolarDayNight(lat, lon, new Date());
 
-    // Fall back to hourly forecast if station observation is unavailable
-    let tempF = hourlyNow.temperature;
-    let textDescription = hourlyNow.shortForecast;
-    let humidityVal = hourlyNow.relativeHumidity?.value || 50;
-    let windSpeedString = `${hourlyNow.windSpeed}`;
-    let baroInches = 29.92;
+    let currentTempF = hourlyNow.temperature;
+    let descriptionText = hourlyNow.shortForecast;
+    let relativeHumidityVal = hourlyNow.relativeHumidity?.value || 50;
+    let windVelocityString = `${hourlyNow.windSpeed}`;
+    let barometricPressureInches = 29.92;
 
-    if (currentConditions) {
-        if (currentConditions.temperature && currentConditions.temperature.value !== null) {
-            tempF = Math.round((currentConditions.temperature.value * 9/5) + 32);
+    if (currentObservation) {
+        if (currentObservation.temperature && currentObservation.temperature.value !== null) {
+            currentTempF = Math.round((currentObservation.temperature.value * 9/5) + 32);
         }
-        if (currentConditions.textDescription) {
-            textDescription = currentConditions.textDescription;
+        if (currentObservation.textDescription) {
+            descriptionText = currentObservation.textDescription;
         }
-        if (currentConditions.relativeHumidity && currentConditions.relativeHumidity.value !== null) {
-            humidityVal = Math.round(currentConditions.relativeHumidity.value);
+        if (currentObservation.relativeHumidity && currentObservation.relativeHumidity.value !== null) {
+            relativeHumidityVal = Math.round(currentObservation.relativeHumidity.value);
         }
-        if (currentConditions.windSpeed && currentConditions.windSpeed.value !== null) {
-            const mph = Math.round(currentConditions.windSpeed.value * 2.23694);
-            windSpeedString = `${mph} mph`;
+        if (currentObservation.windSpeed && currentObservation.windSpeed.value !== null) {
+            const calculatedMph = Math.round(currentObservation.windSpeed.value * 2.23694);
+            windVelocityString = `${calculatedMph} mph`;
         }
-        if (currentConditions.barometricPressure && currentConditions.barometricPressure.value !== null) {
-            baroInches = (currentConditions.barometricPressure.value / 3386.39).toFixed(2);
+        if (currentObservation.barometricPressure && currentObservation.barometricPressure.value !== null) {
+            barometricPressureInches = (currentObservation.barometricPressure.value / 3386.39).toFixed(2);
         }
     }
 
-    // Dynamic UI styling for hero metrics
-    document.getElementById("current-temp").textContent = `${tempF}°`;
-    document.getElementById("current-condition-desc").textContent = textDescription;
+    // Bind current HUD details
+    document.getElementById("current-temp").textContent = `${currentTempF}°`;
+    document.getElementById("current-condition-desc").textContent = descriptionText;
     
-    const precipChance = hourlyNow.probabilityOfPrecipitation?.value || 0;
-    document.getElementById("current-weather-icon").src = window.getWeatherIcon(textDescription, isDay, precipChance);
+    const precipitationChance = hourlyNow.probabilityOfPrecipitation?.value || 0;
+    document.getElementById("current-weather-icon").src = window.getWeatherIcon(descriptionText, isCurrentlyDay, precipitationChance);
 
-    // Handle high/low displays
-    let todayHigh = "--°";
-    let todayLow = "--°";
+    // Bind high/low metrics
+    let dailyHighTemp = "--°";
+    let dailyLowTemp = "--°";
     if (dailyPeriods && dailyPeriods.length > 0) {
-        todayHigh = `${dailyPeriods[0].temperature}°`;
-        todayLow = dailyPeriods[1] ? `${dailyPeriods[1].temperature}°` : "--°";
+        dailyHighTemp = `${dailyPeriods[0].temperature}°`;
+        dailyLowTemp = dailyPeriods[1] ? `${dailyPeriods[1].temperature}°` : "--°";
     }
-    document.getElementById("hero-temp-high").textContent = `H: ${todayHigh}`;
-    document.getElementById("hero-temp-low").textContent = `L: ${todayLow}`;
+    document.getElementById("hero-temp-high").textContent = `H: ${dailyHighTemp}`;
+    document.getElementById("hero-temp-low").textContent = `L: ${dailyLowTemp}`;
 
-    // Apply dashboard card values
-    document.getElementById("metric-apparent").textContent = `${tempF}°F`;
-    document.getElementById("apparent-eval").textContent = tempF < 50 ? "Cool index" : "Standard Index";
+    // Apparent Temp Card
+    document.getElementById("metric-apparent").textContent = `${currentTempF}°F`;
+    document.getElementById("apparent-evaluation-text").textContent = currentTempF < 50 ? "Cool thermal index" : "Pleasant index";
     
-    document.getElementById("metric-wind").textContent = windSpeedString;
-    document.getElementById("wind-direction-text").textContent = `Direction: ${hourlyNow.windDirection || 'N'}`;
+    // Wind velocity Card
+    document.getElementById("metric-wind").textContent = windVelocityString;
+    document.getElementById("wind-panel-direction-text").textContent = `Trajectory direction: ${hourlyNow.windDirection || 'N'}`;
 
-    document.getElementById("metric-humidity").textContent = `${humidityVal}%`;
-    document.getElementById("humidity-dewpoint").textContent = `Dewpoint: ${Math.round(tempF - ((100 - humidityVal) / 5))}°`;
+    // Humidity Card
+    document.getElementById("metric-humidity").textContent = `${relativeHumidityVal}%`;
+    document.getElementById("humidity-dewpoint-evaluation-text").textContent = `Dewpoint: ${Math.round(currentTempF - ((100 - relativeHumidityVal) / 5))}°`;
 
-    document.getElementById("metric-pressure").textContent = `${baroInches} inHg`;
-    document.getElementById("metric-precip").textContent = `${precipChance}%`;
+    // Barometer Card
+    document.getElementById("metric-pressure").textContent = `${barometricPressureInches} inHg`;
+    document.getElementById("metric-precip").textContent = `${precipitationChance}%`;
 
     // Process solar curves
-    const calculatedSunrise = new Date();
-    calculatedSunrise.setHours(6, 0, 0); 
-    const calculatedSunset = new Date();
-    calculatedSunset.setHours(20, 0, 0); 
+    const mockSunriseTime = new Date();
+    mockSunriseTime.setHours(6, 0, 0);
+    const mockSunsetTime = new Date();
+    mockSunsetTime.setHours(20, 0, 0);
 
     document.getElementById("astro-sunrise").textContent = "06:00 AM";
     document.getElementById("astro-sunset").textContent = "08:00 PM";
-    drawSolarArcSvg(calculatedSunrise, calculatedSunset);
+    updateAstronomicalSolarSunNode(mockSunriseTime, mockSunsetTime);
 
-    // Build meteorological insight
-    buildInsightText(textDescription, tempF, windSpeedString, precipChance);
+    // Build the dynamic analysis insight text
+    buildAnalyticalInsightText(descriptionText, currentTempF, windVelocityString, precipitationChance);
 
-    // Build the 48-hour horizontal scroll cards
+    // Render 48-hour horizontal scroll columns
     const hourlyContainer = document.getElementById("hourly-cards-wrapper");
     hourlyContainer.innerHTML = "";
     
     hourlyPeriods.slice(0, 48).forEach(period => {
         const itemPrecip = period.probabilityOfPrecipitation?.value || 0;
         const targetDate = new Date(period.startTime);
-        const colIsDay = isDaytimeAstronomical(lat, lon, targetDate);
-        const timeStr = targetDate.toLocaleTimeString([], { hour: 'numeric' });
+        const colIsDay = parseNwsIsDay(period);
+        const hourLabel = targetDate.toLocaleTimeString([], { hour: 'numeric' });
 
-        const card = document.createElement("div");
-        card.className = "hourly-scroll-column";
-        card.innerHTML = `
-            <span class="hourly-hour-text">${timeStr}</span>
-            <img class="hourly-icon-gfx" src="${window.getWeatherIcon(period.shortForecast, colIsDay, itemPrecip)}" alt="weather">
-            <span class="hourly-temp-value">${period.temperature}°</span>
-            <span class="hourly-precip-value">${itemPrecip >= 20 ? itemPrecip + '%' : ''}</span>
+        const node = document.createElement("div");
+        node.className = "hourly-scroll-column-box";
+        node.innerHTML = `
+            <span class="hourly-column-hour-lbl">${hourLabel}</span>
+            <img class="hourly-column-icon-gfx" src="${window.getWeatherIcon(period.shortForecast, colIsDay, itemPrecip)}" alt="Weather forecast column state">
+            <span class="hourly-column-temp-lbl">${period.temperature}°</span>
+            <span class="hourly-column-precip-lbl">${itemPrecip >= 20 ? itemPrecip + '%' : ''}</span>
         `;
-        hourlyContainer.appendChild(card);
+        hourlyContainer.appendChild(node);
     });
 
-    // Build the 7-day outlook using horizontal range visualizers
+    // Render 7-day outlook using custom horizontal range visualizers
     const dailyContainer = document.getElementById("daily-cards-wrapper");
     dailyContainer.innerHTML = "";
 
-    // Extract weekly min/max range for the slider scaling
-    let absoluteMin = 100;
-    let absoluteMax = -100;
+    // Extract absolute extremes to scale visual tracks
+    let absoluteMinTemp = 100;
+    let absoluteMaxTemp = -100;
     dailyPeriods.forEach(p => {
-        if (p.temperature < absoluteMin) absoluteMin = p.temperature;
-        if (p.temperature > absoluteMax) absoluteMax = p.temperature;
+        if (p.temperature < absoluteMinTemp) absoluteMinTemp = p.temperature;
+        if (p.temperature > absoluteMaxTemp) absoluteMaxTemp = p.temperature;
     });
 
-    // Pair daytime and nighttime forecasts for clean daily rows
-    const groupedDays = [];
+    // Group forecast elements into daily segments
+    const weeklyGroupedSegments = [];
     for (let i = 0; i < dailyPeriods.length; i++) {
-        const period = dailyPeriods[i];
-        if (period.isDaytime) {
-            groupedDays.push({
-                day: period,
+        const segment = dailyPeriods[i];
+        if (segment.isDaytime) {
+            weeklyGroupedSegments.push({
+                day: segment,
                 night: dailyPeriods[i + 1] || null
             });
             i++; 
         } else {
-            groupedDays.push({
+            weeklyGroupedSegments.push({
                 day: null,
-                night: period
+                night: segment
             });
         }
     }
 
-    groupedDays.forEach(group => {
+    weeklyGroupedSegments.forEach(group => {
         const primary = group.day || group.night;
-        const label = primary.name;
-        const iconSrc = window.getWeatherIcon(primary.shortForecast, true, primary.probabilityOfPrecipitation?.value || 0);
+        const dayLabel = primary.name;
+        const iconURL = window.getWeatherIcon(primary.shortForecast, true, primary.probabilityOfPrecipitation?.value || 0);
 
-        const highTemp = group.day ? group.day.temperature : primary.temperature;
-        const lowTemp = group.night ? group.night.temperature : primary.temperature;
+        const highVal = group.day ? group.day.temperature : primary.temperature;
+        const lowVal = group.night ? group.night.temperature : primary.temperature;
 
-        // Map range margins as percentages for the visual slider
-        const totalSpan = absoluteMax - absoluteMin || 1;
-        const leftPercent = Math.max(0, Math.min(100, ((lowTemp - absoluteMin) / totalSpan) * 100));
-        const widthPercent = Math.max(5, Math.min(100, ((highTemp - lowTemp) / totalSpan) * 100));
+        const totalSpan = absoluteMaxTemp - absoluteMinTemp || 1;
+        const leftPercent = Math.max(0, Math.min(100, ((lowVal - absoluteMinTemp) / totalSpan) * 100));
+        const widthPercent = Math.max(8, Math.min(100, ((highVal - lowVal) / totalSpan) * 100));
 
-        const row = document.createElement("div");
-        row.className = "daily-outlook-row";
-        row.innerHTML = `
-            <span class="day-title-label">${label}</span>
-            <img class="day-weather-ico" src="${iconSrc}" alt="Daily Icon">
-            <span class="day-precip-label">${primary.probabilityOfPrecipitation?.value >= 20 ? primary.probabilityOfPrecipitation.value + '%' : ''}</span>
-            <span class="bar-min-lbl">${lowTemp}°</span>
-            <div class="temp-slider-visual-track">
-                <div class="active-range-fill-track" style="left: ${leftPercent}%; width: ${widthPercent}%;"></div>
+        const node = document.createElement("div");
+        node.className = "daily-forecast-row-block";
+        node.innerHTML = `
+            <span class="daily-row-day-title">${dayLabel}</span>
+            <img class="daily-row-weather-gfx" src="${iconURL}" alt="Weather forecast row state">
+            <span class="daily-row-precip-lbl">${primary.probabilityOfPrecipitation?.value >= 20 ? primary.probabilityOfPrecipitation.value + '%' : ''}</span>
+            <span class="daily-row-temp-min-lbl">${lowVal}°</span>
+            <div class="daily-temp-slider-visual-track">
+                <div class="daily-active-range-fill-track" style="left: ${leftPercent}%; width: ${widthPercent}%;"></div>
             </div>
-            <span class="bar-max-lbl">${highTemp}°</span>
+            <span class="daily-row-temp-max-lbl">${highVal}°</span>
         `;
-        dailyContainer.appendChild(row);
+        dailyContainer.appendChild(node);
     });
 
-    applyDynamicThemeColor(textDescription, isDay);
+    generateDynamicSkyBackgroundTheme(descriptionText, isCurrentlyDay);
+    initializeBackdropAnimations(descriptionText);
 }
 
 /**
- * Fallback to Open-Meteo for non-US coordinates
+ * Handle direct queries to Open-Meteo for international coverage
  */
 async function fetchGlobalFallback(lat, lon) {
     try {
-        const queryUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,surface_pressure&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
-        const res = await fetch(queryUrl);
-        if (!res.ok) throw new Error("Fallback servers offline.");
+        const queryURL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,surface_pressure&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto`;
+        const res = await fetch(queryURL);
+        if (!res.ok) throw new Error("Fallback connection timed out.");
 
         const data = await res.json();
-        renderGlobalWeather(data, lat, lon);
+        renderGlobalFallbackWeather(data, lat, lon);
 
     } catch (e) {
-        console.error("No data sources are currently reachable:", e);
+        console.error("Critical rendering failure across all weather services:", e);
     }
 }
 
 /**
- * Process and Render Global Fallback Data
+ * Process and Render Global Fallback Layers
  */
-function renderGlobalWeather(data, lat, lon) {
+function renderGlobalFallbackWeather(data, lat, lon) {
     const cur = data.current;
-    const desc = getWmoInterpretation(cur.weather_code);
-    const isDay = cur.is_day === 1;
+    const wmoLabel = getWmoCodeLabelRepresentation(cur.weather_code);
+    const isCurrentlyDay = cur.is_day === 1;
 
     const tempF = Math.round(cur.temperature_2m);
     document.getElementById("current-temp").textContent = `${tempF}°`;
-    document.getElementById("current-condition-desc").textContent = desc;
-    document.getElementById("current-weather-icon").src = window.getWeatherIcon(desc, isDay, 0);
+    document.getElementById("current-condition-desc").textContent = wmoLabel;
+    document.getElementById("current-weather-icon").src = window.getWeatherIcon(wmoLabel, isCurrentlyDay, 0);
 
-    const maxT = Math.round(data.daily.temperature_2m_max[0]);
-    const minT = Math.round(data.daily.temperature_2m_min[0]);
-    document.getElementById("hero-temp-high").textContent = `H: ${maxT}°`;
-    document.getElementById("hero-temp-low").textContent = `L: ${minT}°`;
+    const highT = Math.round(data.daily.temperature_2m_max[0]);
+    const lowT = Math.round(data.daily.temperature_2m_min[0]);
+    document.getElementById("hero-temp-high").textContent = `H: ${highT}°`;
+    document.getElementById("hero-temp-low").textContent = `L: ${lowT}°`;
 
     document.getElementById("metric-apparent").textContent = `${Math.round(cur.apparent_temperature)}°F`;
     document.getElementById("metric-wind").textContent = `${cur.wind_speed_10m} mph`;
@@ -379,166 +389,238 @@ function renderGlobalWeather(data, lat, lon) {
     document.getElementById("metric-pressure").textContent = `${(cur.surface_pressure * 0.02953).toFixed(2)} inHg`;
     document.getElementById("metric-precip").textContent = `${data.hourly.precipitation_probability[0]}%`;
 
-    const formatTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const sunriseStr = formatTime(data.daily.sunrise[0]);
-    const sunsetStr = formatTime(data.daily.sunset[0]);
+    const formatISOTimeString = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const sunriseLabel = formatISOTimeString(data.daily.sunrise[0]);
+    const sunsetLabel = formatISOTimeString(data.daily.sunset[0]);
 
-    document.getElementById("astro-sunrise").textContent = sunriseStr;
-    document.getElementById("astro-sunset").textContent = sunsetStr;
-    drawSolarArcSvg(new Date(data.daily.sunrise[0]), new Date(data.daily.sunset[0]));
+    document.getElementById("astro-sunrise").textContent = sunriseLabel;
+    document.getElementById("astro-sunset").textContent = sunsetLabel;
+    updateAstronomicalSolarSunNode(new Date(data.daily.sunrise[0]), new Date(data.daily.sunset[0]));
 
-    buildInsightText(desc, tempF, `${cur.wind_speed_10m} mph`, data.hourly.precipitation_probability[0]);
+    buildAnalyticalInsightText(wmoLabel, tempF, `${cur.wind_speed_10m} mph`, data.hourly.precipitation_probability[0]);
 
-    // Build the 48-hour horizontal scroll cards
+    // Build hourly scroll column tiles
     const hourlyContainer = document.getElementById("hourly-cards-wrapper");
     hourlyContainer.innerHTML = "";
 
     for (let i = 0; i < 48; i++) {
         const targetDate = new Date(data.hourly.time[i]);
-        const colIsDay = isDaytimeAstronomical(lat, lon, targetDate);
-        const hTimeStr = targetDate.toLocaleTimeString([], { hour: 'numeric' });
-        const hCode = data.hourly.weather_code[i];
-        const hDesc = getWmoInterpretation(hCode);
-        const hPrecip = data.hourly.precipitation_probability[i];
-        const hTemp = Math.round(data.hourly.temperature_2m[i]);
+        const isColumnDay = data.hourly.is_day[i] === 1; // Direct API day/night calculation
+        const hTimeLabel = targetDate.toLocaleTimeString([], { hour: 'numeric' });
+        const hWmoCode = data.hourly.weather_code[i];
+        const hDescription = getWmoCodeLabelRepresentation(hWmoCode);
+        const hPrecipChance = data.hourly.precipitation_probability[i];
+        const hTempF = Math.round(data.hourly.temperature_2m[i]);
 
-        const card = document.createElement("div");
-        card.className = "hourly-scroll-column";
-        card.innerHTML = `
-            <span class="hourly-hour-text">${hTimeStr}</span>
-            <img class="hourly-icon-gfx" src="${window.getWeatherIcon(hDesc, colIsDay, hPrecip)}" alt="weather">
-            <span class="hourly-temp-value">${hTemp}°</span>
-            <span class="hourly-precip-value">${hPrecip >= 20 ? hPrecip + '%' : ''}</span>
+        const column = document.createElement("div");
+        column.className = "hourly-scroll-column-box";
+        column.innerHTML = `
+            <span class="hourly-column-hour-lbl">${hTimeLabel}</span>
+            <img class="hourly-column-icon-gfx" src="${window.getWeatherIcon(hDescription, isColumnDay, hPrecipChance)}" alt="Weather forecast column state">
+            <span class="hourly-column-temp-lbl">${hTempF}°</span>
+            <span class="hourly-column-precip-lbl">${hPrecipChance >= 20 ? hPrecipChance + '%' : ''}</span>
         `;
-        hourlyContainer.appendChild(card);
+        hourlyContainer.appendChild(column);
     }
 
-    // Build the 7-day outlook using horizontal range visualizers
+    // Build daily range visualizer rows
     const dailyContainer = document.getElementById("daily-cards-wrapper");
     dailyContainer.innerHTML = "";
 
-    let absoluteMin = 100;
-    let absoluteMax = -100;
+    let absoluteMinTemp = 100;
+    let absoluteMaxTemp = -100;
     for (let i = 0; i < data.daily.time.length; i++) {
         const mn = Math.round(data.daily.temperature_2m_min[i]);
         const mx = Math.round(data.daily.temperature_2m_max[i]);
-        if (mn < absoluteMin) absoluteMin = mn;
-        if (mx > absoluteMax) absoluteMax = mx;
+        if (mn < absoluteMinTemp) absoluteMinTemp = mn;
+        if (mx > absoluteMaxTemp) absoluteMaxTemp = mx;
     }
 
     for (let i = 0; i < data.daily.time.length; i++) {
         const dDate = new Date(data.daily.time[i] + 'T00:00:00');
-        const dName = dDate.toLocaleDateString('en-US', { weekday: 'long' });
-        const dCode = data.daily.weather_code[i];
-        const dDesc = getWmoInterpretation(dCode);
-        const hi = Math.round(data.daily.temperature_2m_max[i]);
-        const lo = Math.round(data.daily.temperature_2m_min[i]);
+        const dayLabel = dDate.toLocaleDateString('en-US', { weekday: 'long' });
+        const dWmoCode = data.daily.weather_code[i];
+        const dDescription = getWmoCodeLabelRepresentation(dWmoCode);
+        const maxVal = Math.round(data.daily.temperature_2m_max[i]);
+        const minVal = Math.round(data.daily.temperature_2m_min[i]);
 
-        const totalSpan = absoluteMax - absoluteMin || 1;
-        const leftPercent = Math.max(0, Math.min(100, ((lo - absoluteMin) / totalSpan) * 100));
-        const widthPercent = Math.max(5, Math.min(100, ((hi - lo) / totalSpan) * 100));
+        const totalSpan = absoluteMaxTemp - absoluteMinTemp || 1;
+        const leftPercent = Math.max(0, Math.min(100, ((minVal - absoluteMinTemp) / totalSpan) * 100));
+        const widthPercent = Math.max(8, Math.min(100, ((maxVal - minVal) / totalSpan) * 100));
 
         const row = document.createElement("div");
-        row.className = "daily-outlook-row";
+        row.className = "daily-forecast-row-block";
         row.innerHTML = `
-            <span class="day-title-label">${dName}</span>
-            <img class="day-weather-ico" src="${window.getWeatherIcon(dDesc, true, 0)}" alt="Daily Icon">
-            <span class="day-precip-label"></span>
-            <span class="bar-min-lbl">${lo}°</span>
-            <div class="temp-slider-visual-track">
-                <div class="active-range-fill-track" style="left: ${leftPercent}%; width: ${widthPercent}%;"></div>
+            <span class="daily-row-day-title">${dayLabel}</span>
+            <img class="daily-row-weather-gfx" src="${window.getWeatherIcon(dDescription, true, 0)}" alt="Weather forecast row state">
+            <span class="daily-row-precip-lbl"></span>
+            <span class="daily-row-temp-min-lbl">${minVal}°</span>
+            <div class="daily-temp-slider-visual-track">
+                <div class="daily-active-range-fill-track" style="left: ${leftPercent}%; width: ${widthPercent}%;"></div>
             </div>
-            <span class="bar-max-lbl">${hi}°</span>
+            <span class="daily-row-temp-max-lbl">${maxVal}°</span>
         `;
         dailyContainer.appendChild(row);
     }
 
-    applyDynamicThemeColor(desc, isDay);
+    generateDynamicSkyBackgroundTheme(wmoLabel, isCurrentlyDay);
+    initializeBackdropAnimations(wmoLabel);
 }
 
 /**
- * Draws the SVG solar path arc dynamically
+ * Draws the active SVG path coordinates for the astronomical trajectory
  */
-function drawSolarArcSvg(sunriseDate, sunsetDate) {
-    const sunNode = document.getElementById("svg-sun-node");
-    if (!sunNode) return;
+function updateAstronomicalSolarSunNode(sunriseDate, sunsetDate) {
+    const activeSunIndicator = document.getElementById("svg-active-sun-indicator");
+    if (!activeSunIndicator) return;
 
     const now = new Date();
     if (now < sunriseDate || now > sunsetDate) {
-        // Place sun at coordinates (10, 70) if nighttime
-        sunNode.setAttribute("cx", "10");
-        sunNode.setAttribute("cy", "70");
+        // Night layout placement
+        activeSunIndicator.setAttribute("cx", "10");
+        activeSunIndicator.setAttribute("cy", "70");
         return;
     }
 
-    const totalSecs = sunsetDate - sunriseDate;
-    const passedSecs = now - sunriseDate;
-    const ratio = Math.max(0, Math.min(1, passedSecs / totalSecs));
+    const totalSecondsSpan = sunsetDate - sunriseDate;
+    const passedSecondsSpan = now - sunriseDate;
+    const trackingRatio = Math.max(0, Math.min(1, passedSecondsSpan / totalSecondsSpan));
 
-    // Map percentage to target path: d="M 10 70 Q 100 0 190 70"
-    const cx = 10 + ratio * 180;
-    // Quadratic Bezier Formula: y = (1-t)^2 * y0 + 2(1-t)t * y1 + t^2 * y2
-    const cy = Math.pow(1 - ratio, 2) * 70 + 2 * (1 - ratio) * ratio * 0 + Math.pow(ratio, 2) * 70;
+    // Map tracking value to Bezier coordinates: d="M 10 70 Q 100 0 190 70"
+    const cx = 10 + (trackingRatio * 180);
+    const cy = Math.pow(1 - trackingRatio, 2) * 70 + 2 * (1 - trackingRatio) * trackingRatio * 0 + Math.pow(trackingRatio, 2) * 70;
 
-    sunNode.setAttribute("cx", cx.toFixed(1));
-    sunNode.setAttribute("cy", cy.toFixed(1));
+    activeSunIndicator.setAttribute("cx", cx.toFixed(1));
+    activeSunIndicator.setAttribute("cy", cy.toFixed(1));
 }
 
 /**
- * Generates dynamic meteorological text summaries based on real-time parameters
+ * Procedural rain/snow particle generator overlay
  */
-function buildInsightText(desc, temp, wind, precip) {
-    let text = `Analysis of local conditions shows a ${desc.toLowerCase()} layout. `;
-    if (temp < 45) {
-        text += "Frigid temperatures command standard protective winter gear. ";
+function initializeBackdropAnimations(description) {
+    const box = document.getElementById("weather-particle-effect-renderer");
+    if (!box) return;
+
+    box.innerHTML = "";
+    const txt = description.toLowerCase();
+    
+    let count = 0;
+    let particleType = "";
+
+    if (txt.includes("rain") || txt.includes("drizzle") || txt.includes("shower") || txt.includes("thunderstorm")) {
+        count = 60;
+        particleType = "rain";
+    } else if (txt.includes("snow") || txt.includes("flurries")) {
+        count = 45;
+        particleType = "snow";
+    }
+
+    for (let i = 0; i < count; i++) {
+        const particle = document.createElement("div");
+        particle.className = "weather-particle";
+        
+        const left = Math.random() * 100;
+        const delay = Math.random() * 5;
+        const duration = Math.random() * 2 + (particleType === "rain" ? 1.5 : 3);
+        const opacity = Math.random() * 0.5 + 0.25;
+
+        particle.style.left = `${left}%`;
+        particle.style.animationDelay = `${delay}s`;
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.opacity = opacity;
+
+        if (particleType === "rain") {
+            particle.style.width = "1.5px";
+            particle.style.height = "16px";
+            particle.style.background = "linear-gradient(transparent, rgba(255,255,255,0.75))";
+            particle.style.borderRadius = "0";
+            particle.style.animationName = "fall-rain";
+            particle.style.animationIterationCount = "infinite";
+            particle.style.animationTimingFunction = "linear";
+        } else {
+            const size = Math.random() * 3 + 2;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.background = "#ffffff";
+            particle.style.animationName = "drift-snow";
+            particle.style.animationIterationCount = "infinite";
+            particle.style.animationTimingFunction = "ease-in-out";
+        }
+
+        box.appendChild(particle);
+    }
+}
+
+// Inject procedural styles into the sheet rules
+const customParticleAnimationsSheet = document.createElement("style");
+customParticleAnimationsSheet.textContent = `
+@keyframes fall-rain {
+    0% { transform: translateY(-30px); }
+    100% { transform: translateY(380px); }
+}
+@keyframes drift-snow {
+    0% { transform: translateY(-20px) translateX(0); }
+    50% { transform: translateY(190px) translateX(12px); }
+    100% { transform: translateY(380px) translateX(-12px); }
+}
+`;
+document.head.appendChild(customParticleAnimationsSheet);
+
+/**
+ * Generate structural descriptions
+ */
+function buildAnalyticalInsightText(desc, temp, wind, precip) {
+    let insightStr = `Diagnostic parameters indicate a localized ${desc.toLowerCase()} condition state. `;
+    if (temp < 40) {
+        insightStr += "Frigid temperatures are active. Heavy layered clothing is highly recommended. ";
     } else if (temp > 85) {
-        text += "Warm dynamics are active. Hydration cycles are highly recommended. ";
+        insightStr += "Elevated temperatures detected. Hydration schedules should be active. ";
     } else {
-        text += "Pleasant temperatures are expected. No extreme heat warnings are in effect. ";
+        insightStr += "Temperate climate behaviors are present across coordinates. ";
     }
 
     if (precip >= 50) {
-        text += "Precipitation chances are elevated. An umbrella is advised for any outdoor plans.";
+        insightStr += "High-level water-vapor concentration confirmed. Protect instrumentation with an umbrella.";
     } else if (precip >= 20) {
-        text += "Low-level moisture profiles indicate isolated showers may develop today.";
+        insightStr += "Micro-moisture levels suggest localized high-humidity features may develop.";
     } else {
-        text += "Expect dry ground conditions throughout the day.";
+        insightStr += "Dry surface-level conditions will persist.";
     }
 
-    document.getElementById("weather-insight-text").textContent = text;
+    document.getElementById("weather-insight-text").textContent = insightStr;
 }
 
 /**
- * Changes sky gradient styling based on condition parameters
+ * Dynamically shift atmosphere sky background vectors
  */
-function applyDynamicThemeColor(desc, isDay) {
-    const bg = document.getElementById("dynamic-sky-bg");
+function generateDynamicSkyBackgroundTheme(desc, isDaytime) {
+    const bg = document.getElementById("dynamic-atmosphere-sky");
     if (!bg) return;
 
-    const text = desc.toLowerCase();
-    let gradient = "radial-gradient(circle at top, #0f172a 0%, #020617 100%)"; // Standard night fallback
+    const conditionLabel = desc.toLowerCase();
+    let themeGradient = "radial-gradient(circle at top, #0f172a 0%, #020617 100%)";
 
-    if (isDay) {
-        if (text.includes("rain") || text.includes("drizzle") || text.includes("shower")) {
-            gradient = "radial-gradient(circle at top, #334155 0%, #0f172a 100%)"; // Rain grey
-        } else if (text.includes("thunder") || text.includes("storm")) {
-            gradient = "radial-gradient(circle at top, #1e293b 0%, #090d16 100%)"; // Heavy storm grey
-        } else if (text.includes("cloud") || text.includes("overcast")) {
-            gradient = "radial-gradient(circle at top, #475569 0%, #1e293b 100%)"; // Overcast
+    if (isDaytime) {
+        if (conditionLabel.includes("rain") || conditionLabel.includes("drizzle") || conditionLabel.includes("shower")) {
+            themeGradient = "radial-gradient(circle at top, #334155 0%, #1e293b 100%)";
+        } else if (conditionLabel.includes("thunder") || conditionLabel.includes("storm")) {
+            themeGradient = "radial-gradient(circle at top, #1e293b 0%, #0c1017 100%)";
+        } else if (conditionLabel.includes("cloud") || conditionLabel.includes("overcast")) {
+            themeGradient = "radial-gradient(circle at top, #475569 0%, #1e293b 100%)";
         } else {
-            gradient = "radial-gradient(circle at top, #0284c7 0%, #0f172a 100%)"; // Clear sky blue
+            themeGradient = "radial-gradient(circle at top, #0284c7 0%, #0f172a 100%)";
         }
     } else {
-        if (text.includes("clear") || text.includes("fair")) {
-            gradient = "radial-gradient(circle at top, #1e1b4b 0%, #020617 100%)"; // Indigo night
+        if (conditionLabel.includes("clear") || conditionLabel.includes("fair")) {
+            themeGradient = "radial-gradient(circle at top, #1e1b4b 0%, #020617 100%)";
         }
     }
 
-    bg.style.background = gradient;
+    bg.style.background = themeGradient;
 }
 
 /**
- * Updates iframe source for Precipitation Radar View
+ * Configure target URL coordinates for Radar
  */
 function updateRadarFrame(lat, lon) {
     const frame = document.getElementById("radar-iframe");
@@ -548,9 +630,9 @@ function updateRadarFrame(lat, lon) {
 }
 
 /**
- * Maps WMO code values to explicit descriptions
+ * Maps WMO code parameters to text labels
  */
-function getWmoInterpretation(code) {
+function getWmoCodeLabelRepresentation(code) {
     const codes = {
         0: "Clear Sky",
         1: "Partly Cloudy", 2: "Partly Cloudy", 3: "Overcast",
