@@ -1,22 +1,23 @@
 /* ==========================================================================
-   WINDYWEATHER SYSTEM SPECIFICATION STYLESHEET
-   Clear Hollow Frame Design Edition
+   WINDYWEATHER CORE STYLESHEET
+   Fullscreen Backdrop & Hollow Frame Design
    ========================================================================== */
 
 :root {
-    --bg-dark-tint: rgba(10, 12, 16, 0.45); /* Soft, highly transparent overlay to protect legibility over any background graphic */
-    --hollow-border-color: rgba(255, 255, 255, 0.28);
-    --hollow-border-active: rgba(56, 189, 248, 0.7);
-    --material-primary-text: #ffffff;
-    --material-secondary-text: rgba(255, 255, 255, 0.7);
+    --material-primary-text: #f1f5f9;
+    --material-secondary-text: #cbd5e1;
     --pixel-blue: #38bdf8;
     --pixel-amber: #f59e0b;
     --pixel-danger: #f87171;
     --font-stack: 'Inter', system-ui, -apple-system, sans-serif;
-    --transition-standard: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --transition-standard: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    
+    /* Hollow Border configs */
+    --hollow-border-color: rgba(255, 255, 255, 0.35);
+    --hollow-border-active: rgba(56, 189, 248, 0.6);
+    --hollow-bg: rgba(10, 14, 23, 0.65);
 }
 
-/* Base Document Configurations */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -25,75 +26,54 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Dynamic Fullscreen Image background - CLEAR, NO glassmorphism */
 body {
-    background-color: #0a0c10;
+    background: url('../backdrop.png') no-repeat center center fixed;
+    background-size: cover;
     color: var(--material-primary-text);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     overflow-x: hidden;
-    position: relative;
 }
 
-/* Full-bleed, fixed background graphics layer with NO glassmorphism */
-.hollow-fullscreen-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -5;
-    background: url('../backdrop.png') no-repeat center center fixed;
-    background-size: cover;
-    filter: none !important; /* Zero glassmorphism/blur */
-}
-
-/* Primary Workspace Constraints */
-.hollow-app-container {
+/* Clear, crisp fullscreen overlay (provides contrast without blur) */
+.app-fullscreen-wrapper {
     width: 100%;
-    max-width: 860px;
+    max-width: 850px;
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.35);
+    min-height: 100vh;
     box-sizing: border-box;
 }
 
-/* Hollow Base Card Styles (No glass blur, clear borders) */
+/* Crisp Outline Hollow Frame Class */
 .hollow-card {
-    background: var(--bg-dark-tint);
-    border: 1.5px solid var(--hollow-border-color);
+    background: var(--hollow-bg);
+    border: 2px solid var(--hollow-border-color);
     border-radius: 20px;
-    padding: 24px;
-    backdrop-filter: none !important; /* Forces background transparency to remain perfectly clear */
-    -webkit-backdrop-filter: none !important;
-    box-shadow: none;
+    padding: 20px;
     transition: var(--transition-standard);
+    box-shadow: none; /* Strip standard shadows for hollow outlines */
+    overflow: hidden; /* Fix layout container clipping */
     box-sizing: border-box;
-    width: 100%;
-    overflow: hidden; /* Prevent text overflow clipping */
 }
 
 .hollow-card:hover {
     border-color: var(--hollow-border-active);
 }
 
-/* UI Safety Layer: Prevents text clipping in parent containers */
-p, span, h1, h2, h3, h4, h5, h6 {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    word-break: break-word;
-    max-width: 100%;
-}
-
-/* Header & Inputs Area */
+/* Material Hollow Header & Controls */
 .hollow-header {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.header-brand-row {
+.brand-line {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -101,38 +81,38 @@ p, span, h1, h2, h3, h4, h5, h6 {
     gap: 16px;
 }
 
-.brand-badge {
+.brand-logo-group {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.brand-logo-animation {
+.brand-windsock {
     width: 44px;
     height: 44px;
-    animation: bounce-rotate 6s ease-in-out infinite alternate;
+    animation: wind-sway 4s ease-in-out infinite alternate;
 }
 
-@keyframes bounce-rotate {
-    0% { transform: translateY(0) rotate(0deg); }
-    100% { transform: translateY(-3px) rotate(6deg); }
+@keyframes wind-sway {
+    0% { transform: translateY(0) rotate(-4deg); }
+    100% { transform: translateY(-3px) rotate(4deg); }
 }
 
-.brand-text {
+.brand-title {
     font-size: 24px;
     font-weight: 800;
     letter-spacing: -0.02em;
     color: #ffffff;
 }
 
-/* Hollow Inputs Row */
+/* Hollow Search Pill */
 .hollow-search-pill {
     position: relative;
     display: flex;
     align-items: center;
-    background: rgba(10, 12, 16, 0.6);
-    border: 1.5px solid var(--hollow-border-color);
-    border-radius: 28px;
+    background: var(--hollow-bg);
+    border: 2px solid var(--hollow-border-color);
+    border-radius: 25px;
     padding: 6px 16px;
     flex-grow: 1;
     max-width: 440px;
@@ -141,11 +121,11 @@ p, span, h1, h2, h3, h4, h5, h6 {
 
 .hollow-search-pill:focus-within {
     border-color: var(--pixel-blue);
-    background: rgba(10, 12, 16, 0.85);
+    background: rgba(10, 14, 23, 0.85);
 }
 
-.search-indicator {
-    font-size: 15px;
+.search-symbol {
+    font-size: 16px;
     color: var(--material-secondary-text);
     margin-right: 12px;
 }
@@ -163,7 +143,7 @@ p, span, h1, h2, h3, h4, h5, h6 {
     color: var(--material-secondary-text);
 }
 
-.hollow-gps-button {
+.hollow-action-circle {
     background: transparent;
     border: none;
     color: var(--pixel-blue);
@@ -174,18 +154,18 @@ p, span, h1, h2, h3, h4, h5, h6 {
     transition: var(--transition-standard);
 }
 
-.hollow-gps-button:hover {
-    background: rgba(255, 255, 255, 0.1);
+.hollow-action-circle:hover {
+    background: rgba(255, 255, 255, 0.08);
 }
 
-/* Autocomplete results dropdown */
+/* Autocomplete Suggestion Dropdowns */
 .hollow-suggestions-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    background: #0f1115;
-    border: 1.5px solid var(--hollow-border-color);
+    background: #0d1117;
+    border: 2px solid var(--hollow-border-color);
     border-radius: 16px;
     z-index: 100;
     max-height: 240px;
@@ -200,23 +180,23 @@ p, span, h1, h2, h3, h4, h5, h6 {
 }
 
 .suggestion-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
 }
 
-/* Quick access saved environments shelf */
-.shelf-wrapper {
-    padding: 16px;
+/* Saved environments drawer shelf */
+.saved-shelf {
+    padding: 12px 16px;
 }
 
 .shelf-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
-.shelf-title {
+.shelf-label {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -224,26 +204,26 @@ p, span, h1, h2, h3, h4, h5, h6 {
     color: var(--material-secondary-text);
 }
 
-.hollow-add-btn {
+.hollow-add-chip {
     background: transparent;
-    border: 1.5px solid var(--hollow-border-color);
+    border: 1.5px solid rgba(56, 189, 248, 0.35);
     color: var(--pixel-blue);
     font-size: 11px;
     font-weight: 700;
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: 12px;
     cursor: pointer;
     transition: var(--transition-standard);
 }
 
-.hollow-add-btn:hover {
+.hollow-add-chip:hover {
+    background: rgba(56, 189, 248, 0.1);
     border-color: var(--pixel-blue);
-    background: rgba(56, 189, 248, 0.08);
 }
 
 .shelf-scroll-row {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
 }
@@ -257,12 +237,12 @@ p, span, h1, h2, h3, h4, h5, h6 {
     border-radius: 2px;
 }
 
-.hollow-pill {
-    background: transparent;
+.location-pill {
+    background: rgba(255, 255, 255, 0.04);
     border: 1.5px solid var(--hollow-border-color);
     color: var(--material-primary-text);
-    padding: 6px 14px;
-    border-radius: 18px;
+    padding: 6px 12px;
+    border-radius: 16px;
     font-size: 13px;
     cursor: pointer;
     display: flex;
@@ -272,9 +252,9 @@ p, span, h1, h2, h3, h4, h5, h6 {
     transition: var(--transition-standard);
 }
 
-.hollow-pill:hover {
+.location-pill:hover {
+    background: rgba(255, 255, 255, 0.08);
     border-color: var(--pixel-blue);
-    background: rgba(255, 255, 255, 0.04);
 }
 
 .delete-pill-cross {
@@ -284,164 +264,152 @@ p, span, h1, h2, h3, h4, h5, h6 {
     padding-left: 4px;
 }
 
-/* Current location titles */
-.location-hud-display {
+/* Location Header Details */
+.hollow-city-identity {
     text-align: center;
-    margin-top: 8px;
+    margin-top: 4px;
 }
 
-.hud-city-title {
-    font-size: 38px;
+.city-name-header {
+    font-size: 36px;
     font-weight: 800;
     color: #ffffff;
     letter-spacing: -0.03em;
 }
 
-.hud-coords-subtitle {
+.city-coords-subheader {
     font-size: 13px;
     color: var(--material-secondary-text);
-    margin-top: 6px;
+    margin-top: 4px;
 }
 
-/* Current Temperature Hero Visualizer */
-.visualizer-frame {
-    padding: 28px;
+/* Weather Hero Panel - Crisp and Clean with Hollow Border */
+.current-hero-panel {
+    border-width: 2.5px;
+    background: rgba(10, 14, 23, 0.5);
 }
 
-.visualizer-content-grid {
+.current-hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.current-temp-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.giant-temp-label {
+    font-size: 88px;
+    font-weight: 200;
+    color: #ffffff;
+    letter-spacing: -0.04em;
+    line-height: 1;
+}
+
+.hero-weather-icon {
+    width: 76px;
+    height: 76px;
+}
+
+.current-desc-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
+    font-size: 16px;
 }
 
-.temp-display-group {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.visualizer-giant-temp {
-    font-size: 84px;
-    font-weight: 200;
-    color: #ffffff;
-    line-height: 1;
-    letter-spacing: -0.05em;
-}
-
-.visualizer-condition-icon {
-    width: 80px;
-    height: 80px;
-}
-
-.extremes-display-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-}
-
-@media(max-width: 500px) {
-    .extremes-display-group {
-        align-items: flex-start;
-        width: 100%;
-    }
-}
-
-.visualizer-condition-label {
-    font-size: 18px;
+.condition-desc-text {
     font-weight: 700;
     color: #ffffff;
 }
 
-.visualizer-extremes-row {
+.extremes-lbl-group {
     display: flex;
     gap: 12px;
-    font-size: 14px;
 }
 
-.extreme-label-high {
+.high-temp-pill {
     font-weight: bold;
-    color: #ffffff;
 }
 
-.extreme-label-low {
+.low-temp-pill {
     color: var(--material-secondary-text);
 }
 
-/* Advisory Alerts Stack */
-.hollow-alerts-stack {
+/* NWS Emergency Alert Banners */
+.hollow-alerts-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
-.hollow-alert-card {
-    background: rgba(248, 113, 113, 0.05);
-    border: 1.5px solid var(--pixel-danger);
+.alert-item-box {
+    background: rgba(239, 68, 68, 0.15);
+    border: 2px solid var(--pixel-danger);
     border-radius: 16px;
-    padding: 16px 20px;
+    padding: 14px 18px;
     display: flex;
     gap: 14px;
     align-items: flex-start;
 }
 
-.alert-icon {
+.alert-warning-symbol {
     font-size: 24px;
 }
 
-.alert-text-body h4 {
-    color: var(--pixel-danger);
+.alert-body h4 {
+    color: #f87171;
     font-size: 15px;
     font-weight: bold;
     margin-bottom: 4px;
 }
 
-.alert-text-body p {
+.alert-body p {
     font-size: 13px;
     color: var(--material-primary-text);
-    line-height: 1.45;
+    line-height: 1.4;
 }
 
-/* 4-Tab Hollow Navigation Pill Bar */
-.hollow-pill-tabs-bar {
+/* 4-Tab Pill Styled Navigation Bar (25px rounded corner) */
+.hollow-tabbar-navigation {
     display: flex;
-    background: rgba(10, 12, 16, 0.6);
-    border: 1.5px solid var(--hollow-border-color);
-    border-radius: 28px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--hollow-border-color);
+    border-radius: 25px; /* STRICT 25px rounding */
     padding: 4px;
     gap: 4px;
     overflow-x: auto;
 }
 
-.hollow-pill-tabs-bar::-webkit-scrollbar {
+.hollow-tabbar-navigation::-webkit-scrollbar {
     display: none;
 }
 
 .hollow-tab-btn {
     flex: 1;
-    min-width: 110px;
+    min-width: 90px;
     background: transparent;
     border: none;
     color: var(--material-secondary-text);
-    padding: 12px 14px;
+    padding: 10px 14px;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    border-radius: 24px;
+    border-radius: 21px; /* Complementary 21px interior rounding */
     white-space: nowrap;
     transition: var(--transition-standard);
 }
 
 .hollow-tab-btn.active {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1.5px solid var(--hollow-border-color);
-    color: #ffffff;
+    background: var(--pixel-blue);
+    color: #000000;
 }
 
-/* Loading Ring */
-.hollow-loader {
+/* Sync Spinner Elements */
+.hollow-sync-spinner {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -449,249 +417,262 @@ p, span, h1, h2, h3, h4, h5, h6 {
     gap: 16px;
 }
 
-.hollow-spinner-ring {
+.hollow-loading-circle {
     width: 38px;
     height: 38px;
-    border: 3px solid rgba(255, 255, 255, 0.05);
-    border-top: 3px solid var(--pixel-blue);
+    border: 3.5px solid rgba(255, 255, 255, 0.1);
+    border-top: 3.5px solid var(--pixel-blue);
     border-radius: 50%;
-    animation: loader-spin-animation 0.75s linear infinite;
+    animation: loader-spin 0.8s linear infinite;
 }
 
-@keyframes loader-spin-animation {
+@keyframes loader-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-.loader-caption {
+.loading-label {
     font-size: 14px;
     color: var(--material-secondary-text);
 }
 
-/* Master viewport panel setups */
-.hollow-tab-panel {
+/* Viewport Containers layout */
+.viewport-view {
     display: none;
 }
 
-.hollow-tab-panel.active-panel {
+.viewport-view.active-view {
     display: block;
-    animation: zoom-fade-reveal 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: reveal-view 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes zoom-fade-reveal {
-    from { opacity: 0; transform: scale(0.98) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+@keyframes reveal-view {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Insight Cards */
+.hollow-viewport-area {
+    margin-top: 4px;
+}
+
+/* Custom AI Insights Panel Card */
 .insight-card {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-bottom: 24px;
-    border-left: 4px solid var(--pixel-blue);
+    gap: 12px;
+    margin-bottom: 20px;
+    border-left: 5px solid var(--pixel-blue);
 }
 
-.insight-header {
+.insight-headline {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-.insight-header-icon {
+.insight-headline-icon {
     width: 24px;
     height: 24px;
 }
 
-.insight-title-text {
+.insight-headline h3 {
     font-size: 15px;
     font-weight: 800;
     color: var(--pixel-blue);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
 
-.insight-body-text {
+.insight-card p {
     font-size: 14px;
     line-height: 1.5;
     color: var(--material-primary-text);
+    word-wrap: break-word; /* Strict overflow wrap */
 }
 
-/* Hollow Dashboard Grid layout */
-.hollow-metrics-dashboard-grid {
+/* Instrument Metrics Grid */
+.hollow-dashboard-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 16px;
 }
 
-@media(max-width: 600px) {
-    .hollow-metrics-dashboard-grid {
+@media (max-width: 600px) {
+    .hollow-dashboard-grid {
         grid-template-columns: 1fr;
     }
 }
 
-.metric-block-card {
+.instrument-metric {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: 150px;
+    
+    /* Strict Padding bounds preventing rounded box collisions */
+    padding: 20px;
+    overflow: hidden;
 }
 
-.metric-card-top {
+.instrument-top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
 }
 
-.metric-card-title {
+.instrument-label {
     font-size: 13px;
     font-weight: 700;
     color: var(--material-secondary-text);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
 }
 
-.metric-card-icon {
+.instrument-icon {
     width: 32px;
     height: 32px;
 }
 
-.metric-card-bottom {
+.instrument-bottom {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-top: 20px;
+    margin-top: 16px;
 }
 
-.metric-card-value {
+.instrument-bottom h4 {
     font-size: 28px;
     font-weight: 300;
     color: #ffffff;
+    line-height: 1.2;
 }
 
-.metric-card-subtitle {
+.instrument-subtext {
     font-size: 12px;
     color: var(--material-secondary-text);
+    word-wrap: break-word; /* Fixes text overflow layout clipping */
 }
 
-/* Astronomical Coordinates Card */
-.astronomical-card-wide {
+/* Solar Trajectory Visuals */
+.astronomical-card {
     grid-column: span 2;
 }
 
-@media(max-width: 600px) {
-    .astronomical-card-wide {
+@media (max-width: 600px) {
+    .astronomical-card {
         grid-column: span 1;
     }
 }
 
-.astro-canvas-wrapper {
+.astronomical-arc-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     margin-top: 12px;
 }
 
-.astro-arc-svg-frame {
+.astronomical-arc-svg {
     width: 100%;
     height: 90px;
 }
 
-.astro-time-legends-row {
+.sun-glow {
+    animation: sun-pulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes sun-pulse {
+    0% { r: 5.5; fill: #f59e0b; }
+    100% { r: 7.5; fill: #fbbf24; filter: drop-shadow(0 0 3px #fbbf24); }
+}
+
+.astronomical-time-legend {
     display: flex;
     justify-content: space-between;
 }
 
-.astro-milestone {
+.astro-time-milestone {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 13px;
 }
 
-.astro-mini-icon {
-    width: 24px;
-    height: 24px;
+.inline-astro-ico {
+    width: 22px;
+    height: 22px;
 }
 
-/* Hourly scrolling frames */
-.hourly-panel-box {
+/* Hourly scrolling timelines */
+.forecast-container-card {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.panel-section-title {
+.forecast-section-title {
     font-size: 16px;
     font-weight: 800;
     color: #ffffff;
 }
 
-.hourly-overflow-scroll-row {
+.hourly-horizontal-scroll {
     display: flex;
     gap: 12px;
     overflow-x: auto;
     padding: 10px 0;
 }
 
-.hourly-overflow-scroll-row::-webkit-scrollbar {
-    height: 5px;
+.hourly-horizontal-scroll::-webkit-scrollbar {
+    height: 4px;
 }
 
-.hourly-overflow-scroll-row::-webkit-scrollbar-thumb {
+.hourly-horizontal-scroll::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
+    border-radius: 2px;
 }
 
-.hourly-card-column {
-    flex: 0 0 78px;
+.hourly-column-tile {
+    flex: 0 0 76px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    padding: 16px 8px;
-    background: transparent;
+    padding: 14px 6px;
+    background: rgba(255, 255, 255, 0.02);
     border: 1.5px solid var(--hollow-border-color);
-    border-radius: 18px;
+    border-radius: 16px;
     transition: var(--transition-standard);
 }
 
-.hourly-card-column:hover {
-    border-color: var(--hollow-border-active);
-    background: rgba(255, 255, 255, 0.02);
+.hourly-column-tile:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--pixel-blue);
 }
 
-.hourly-card-hour {
+.hourly-tile-hour {
     font-size: 13px;
     color: var(--material-secondary-text);
-    font-weight: 700;
+    font-weight: 600;
 }
 
-.hourly-card-icon {
+.hourly-tile-gfx {
     width: 40px;
     height: 40px;
 }
 
-.hourly-card-temp {
+.hourly-tile-temp {
     font-size: 16px;
     font-weight: bold;
-    color: #ffffff;
 }
 
-.hourly-card-precip {
+.hourly-tile-precip {
     font-size: 10px;
     color: var(--pixel-blue);
-    font-weight: 800;
+    font-weight: 700;
 }
 
-/* Daily Range sliders */
-.daily-panel-box {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.daily-vertical-rows-wrapper {
+/* Daily Range Visual Sliders */
+.daily-vertical-list {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -701,52 +682,57 @@ p, span, h1, h2, h3, h4, h5, h6 {
     display: grid;
     grid-template-columns: 110px 40px 30px 1fr 30px 40px;
     align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
-    background: transparent;
+    gap: 14px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
     border: 1.5px solid var(--hollow-border-color);
-    border-radius: 18px;
+    overflow: hidden; /* Prevent visual overflow issues */
 }
 
-@media(max-width: 500px) {
+@media (max-width: 500px) {
     .daily-row-frame {
         grid-template-columns: 80px 36px 24px 1fr 24px 36px;
         gap: 8px;
-        padding: 8px 12px;
+        padding: 8px 10px;
     }
 }
 
-.daily-row-day-name {
+.daily-day-label {
     font-size: 14px;
     font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.daily-row-icon-gfx {
+.daily-row-gfx {
     width: 36px;
     height: 36px;
 }
 
-.daily-row-precip-text {
+.daily-precip-label {
     font-size: 11px;
     color: var(--pixel-blue);
-    font-weight: 800;
+    font-weight: 700;
     text-align: center;
 }
 
-.daily-row-temp-min {
+.daily-min-label {
     font-size: 13px;
     color: var(--material-secondary-text);
     text-align: right;
 }
 
-.daily-row-temp-max {
+.daily-max-label {
     font-size: 13px;
     color: #ffffff;
-    font-weight: bold;
+    font-weight: 700;
 }
 
-/* Linear Temperature range slider bar */
-.daily-temp-slider-track {
+/* Temperature Visual Sliders */
+.temp-slider-visual-track {
     position: relative;
     height: 6px;
     background: rgba(255, 255, 255, 0.12);
@@ -755,59 +741,61 @@ p, span, h1, h2, h3, h4, h5, h6 {
     width: 100%;
 }
 
-.daily-active-range-track-fill {
+.active-range-fill-track {
     position: absolute;
     height: 100%;
     background: linear-gradient(to right, var(--pixel-blue), var(--pixel-amber));
     border-radius: 3px;
 }
 
-/* Radar iframe components (Big and Spacious) */
-.radar-panel-box {
+/* Spacious Radar Card View */
+.spacious-radar-card {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
-.radar-header-block {
+.radar-header {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.radar-title-text {
-    font-size: 18px;
+.radar-main-title {
+    font-size: 17px;
     font-weight: 800;
+    color: #ffffff;
 }
 
-.radar-subtitle-text {
+.radar-sub-title {
     font-size: 12px;
     color: var(--material-secondary-text);
 }
 
-.radar-iframe-viewport-frame {
+/* Bigger Spacious full-height frame box */
+.radar-spacious-iframe-wrapper {
     position: relative;
     width: 100%;
-    height: 520px; /* Highly detailed larger visualization frame */
-    border-radius: 20px;
+    height: 500px; /* Spacious dimensions */
+    border-radius: 16px;
     overflow: hidden;
-    border: 1.5px solid var(--hollow-border-color);
+    border: 2.5px solid var(--hollow-border-color);
 }
 
-@media(max-width: 600px) {
-    .radar-iframe-viewport-frame {
-        height: 380px;
+@media (max-width: 600px) {
+    .radar-spacious-iframe-wrapper {
+        height: 360px;
     }
 }
 
-.radar-iframe-viewport-frame iframe {
+.radar-spacious-iframe-wrapper iframe {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     border: none;
-    background: #0a0c10;
+    background: #0d1117;
 }
 
 .hidden {
